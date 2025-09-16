@@ -8,6 +8,7 @@ function createReport(url) {
 
   let currentListItem;
   let llmOutputContainer;
+  let currentMarkdown = "";
 
   function showMessage(message, type = "info") {
     messageArea.textContent = message;
@@ -46,8 +47,10 @@ function createReport(url) {
       );
       currentListItem.appendChild(llmOutputContainer);
       eventsList.appendChild(currentListItem);
+      currentMarkdown = "";
     }
-    llmOutputContainer.textContent += chunk;
+    currentMarkdown += chunk;
+    llmOutputContainer.innerHTML = marked.parse(currentMarkdown);
   }
 
   function showProgress(msg) {
@@ -83,8 +86,8 @@ function createReport(url) {
         return resp.json();
       })
       .then((report) => {
-        // eventsList.style.display = "none";
-        // reportContainer.innerHTML = marked.parse(report);
+        eventsList.style.display = "none";
+        reportContainer.innerHTML = marked.parse(report);
         for (const [event, body] of report) {
           handleEvent(body, event);
         }
@@ -102,6 +105,13 @@ function createReport(url) {
       "error",
     );
   } else {
+    try {
+        new URL(url);
+    } catch (error) {
+        showMessage("The provided string is not a valid URL. Please enter a full URL (e.g., https://...).", "error");
+        return;
+    }
+
     showMessage("Submitting build for analysis...", "info");
     fetch("/submit?build=" + url, { method: "PUT" })
       .then((resp) => {

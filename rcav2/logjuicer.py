@@ -26,7 +26,8 @@ async def wait_report(env: Env, wurl: str, report_id: int):
     wurl = f"{wurl}/logjuicer/wsapi/report/{report_id}"
 
     try:
-        async with httpx_ws.aconnect_ws(
+        # type: ignore
+        async with httpx_ws.aconnect_ws(  # type: ignore
             wurl, env.httpx, auth=env.auth, keepalive_ping_timeout_seconds=None
         ) as ws:
             while True:
@@ -88,12 +89,12 @@ async def get_remote_report(env: Env, url: str) -> Report:
             env.log.error("WS error :/", e)
 
 
-def get_report(env: Env, url: str) -> Report:
+async def get_report(env: Env, url: str) -> Report:
     import os
     import rcav2.auth
 
     if not os.environ.get("LOGJUICER_HTTP_AUTH"):
-        rcav2.auth.ensure_cookie(env)
+        await rcav2.auth.ensure_cookie(env)
         os.environ["LOGJUICER_HTTP_AUTH"] = (
             f"Cookie: mod_auth_openidc_session={env.cookie}"
         )

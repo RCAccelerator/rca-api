@@ -17,9 +17,9 @@ dependencies = [
 dev = [
     "llm>=0.27.1",
     "llm-gemini>=0.25",
+    "mypy>=1.18.1",
     "pytest>=8.4.1",
     "ruff>=0.11.12",
-    "ty>=0.0.1a7",
 ]
 
 [build-system]

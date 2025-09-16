@@ -2,7 +2,7 @@
 ci:
 	@uv run ruff check --fix
 	@uv run ruff format
-	@uv run ty check
+	@uv run mypy rcav2
 	@uv run pytest --doctest-modules
 
 .PHONY: serve

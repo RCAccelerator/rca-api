@@ -26,7 +26,7 @@ class RCAJob(Job):
     def __init__(self, env: rcav2.env.Env, url: str):
         self.url = url
         self.env = env
-        self.result = None
+        self.result: None | str = None
 
     @property
     def job_key(self) -> str:

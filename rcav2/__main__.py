@@ -15,6 +15,7 @@ from rcav2.config import DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT
 def usage():
     parser = argparse.ArgumentParser(description="Root Cause Analysis (RCA)")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--local-logjuicer", action="store_true")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="The model name")
     parser.add_argument("--system", default=DEFAULT_SYSTEM_PROMPT)
     parser.add_argument("URL", help="The build URL")
@@ -24,7 +25,10 @@ def usage():
 async def amain():
     args = usage()
     env = rcav2.env.Env(args.debug)
-    report = await rcav2.logjuicer.get_remote_report(env, args.URL)
+    if args.local_logjuicer:
+        report = await rcav2.logjuicer.get_remote_report(env, args.URL)
+    else:
+        report = await rcav2.logjuicer.get_report(env, args.URL)
     with open(".report.json", "w") as f:
         f.write(rcav2.logjuicer.dump_report(report))
     prompt = rcav2.prompt.report_to_prompt(report)

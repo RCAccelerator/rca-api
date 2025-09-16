@@ -5,7 +5,7 @@ import ssl
 import httpx
 import pathlib
 import logging
-from httpx_gssapi import HTTPSPNEGOAuth, OPTIONAL
+from httpx_gssapi import HTTPSPNEGOAuth, OPTIONAL  # type: ignore
 from rcav2.config import SF_DOMAIN
 
 
@@ -31,7 +31,7 @@ def make_httpx_client() -> httpx.AsyncClient:
     verify = True
     local_ca = "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
     if pathlib.Path(local_ca).exists():
-        verify = ssl.create_default_context(cafile=local_ca)
+        verify = ssl.create_default_context(cafile=local_ca)  # type: ignore
 
     # Restore cookies
     cookies = httpx.Cookies()

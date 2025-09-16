@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install a specific version of uv
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: "0.8.17"
+
+    - name: Cache uv
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+
+    - name: Install kerberos dependencies
+      run: sudo apt-get update && sudo apt-get install -y libkrb5-dev
+
+    - name: Install project dependencies
+      run: uv sync
+
+    - name: Run Makefile target for testing
+      run: make ci
+      env:
+        SF_DOMAIN: "example.com"

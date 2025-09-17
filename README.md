@@ -37,7 +37,26 @@ $ uv run rcav2 $BUILD_URL
 
 The project also includes a FastAPI server. To run it for development:
 ```ShellSession
-uv run fastapi dev --host 0.0.0.0 --port 8080 ./rcav2/api.py
+make serve
+```
+
+### Frontend
+
+The frontend requires Node.js version 20.19.2.
+
+To install the dependencies:
+```ShellSession
+make frontend-install
+```
+
+To run the frontend development server:
+```ShellSession
+make frontend-dev
+```
+
+To build the frontend:
+```ShellSession
+make frontend-build
 ```
 
 ## Development

@@ -8,3 +8,5 @@ venv/
 .report.json
 .prompt.txt
 .db.sqlite3
+node_modules
+dist

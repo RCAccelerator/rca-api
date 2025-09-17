@@ -2,6 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 function createReport(url) {
+
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
   const eventsList = document.getElementById("events");
   const reportContainer = document.getElementById("report-container");
   const messageArea = document.getElementById("message-area");
@@ -35,6 +47,7 @@ function createReport(url) {
     llmOutputContainer = null;
   }
 
+
   function showChunk(chunk) {
     if (!currentListItem) {
       currentListItem = document.createElement("li");
@@ -52,6 +65,7 @@ function createReport(url) {
     currentMarkdown += chunk;
     llmOutputContainer.innerHTML = marked.parse(currentMarkdown);
   }
+  const debouncedShowChunk = debounce(showChunk, 150);
 
   function showProgress(msg) {
     const newElement = document.createElement("li");
@@ -72,7 +86,7 @@ function createReport(url) {
     } else if (event == "progress") {
       showProgress(body);
     } else if (event == "chunk") {
-      showChunk(body);
+      debouncedShowChunk(body);
     }
   }
 

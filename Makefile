@@ -16,26 +16,26 @@ ci: ## Run tests, linting and type checking
 	@uv run mypy rcav2
 	@uv run pytest --doctest-modules
 
-.PHONY: backend
-backend: ## Run the backend server
-	@uv run fastapi dev --host 0.0.0.0 --port 8080 ./rcav2/api.py
-
-.PHONY: frontend
-frontend: frontend-install frontend-build frontend-dev ## Run the frontend dev server
+.PHONY: serve
+serve: frontend-build backend-serve ## Run RCAv2 app with compiled assets
 
 .PHONY: release
 release: ## Create a release version of the app
 	npm run release
 	uv build
 
+.PHONY: backend-serve
+backend-serve: ## Serve the backend API server
+	@uv run fastapi dev --host 0.0.0.0 --port 8080 ./rcav2/api.py
 .PHONY: frontend-install
+
 frontend-install:
 	npm install
 
-.PHONY: frontend-dev
-frontend-dev:
+.PHONY: frontend-serve
+frontend-serve: frontend-install ## Start the frontend dev server
 	npm run dev
 
-.PHONY: frontend-build
+.PHONY: frontend-build ## Build a static version to be served by the api
 frontend-build:
 	npm run build

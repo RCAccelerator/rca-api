@@ -33,33 +33,43 @@ $ uv run rcav2 $BUILD_URL
 [RCA will be printed here]
 ```
 
-### Web API
+## Development Environment
 
-The project also includes a FastAPI server. To run it for development:
+There are two primary ways to run the development environment, depending on your needs.
+
+### 1. Serve Backend with Compiled Frontend Assets
+
+This approach is ideal for testing the application as a single, unified service. The frontend is built into static assets and served directly by the backend.
+
+To run the application in this mode, use the following command:
+
 ```ShellSession
 make serve
 ```
 
-### Frontend
+This will:
+1. Build the frontend assets.
+2. Start the FastAPI backend server, which will also serve the frontend.
 
-The frontend requires Node.js version 20.19.2.
+### 2. Run Backend and Frontend as Separate Instances
 
-To install the dependencies:
+This setup is useful when you are actively developing the frontend and want to take advantage of hot-reloading features.
+
+**Start the Backend:**
+To run the backend API server, use:
 ```ShellSession
-make frontend-install
+make backend-serve
 ```
 
-To run the frontend development server:
+**Start the Frontend:**
+The frontend requires Node.js version 20.19.2. To install the dependencies and run the frontend development server, use:
 ```ShellSession
-make frontend-dev
+make frontend-serve
 ```
 
-To build the frontend:
-```ShellSession
-make frontend-build
-```
+This will start the Vite development server with hot-reloading enabled.
 
-## Development
+## Tests
 
 To validate your changes, run the continuous integration script:
 ```ShellSession

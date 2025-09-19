@@ -22,7 +22,7 @@ def usage():
     return parser.parse_args()
 
 
-async def amain():
+async def run(args, env):
     args = usage()
     env = rcav2.env.Env(args.debug)
     if args.local_logjuicer:
@@ -40,6 +40,15 @@ async def amain():
         elif event == "usage":
             print()
             env.log.info("Request usage: %s -> %s", message["input"], message["output"])
+
+
+async def amain():
+    args = usage()
+    env = rcav2.env.Env(args.debug)
+    try:
+        await run(args, env)
+    finally:
+        env.close()
 
 
 def main():

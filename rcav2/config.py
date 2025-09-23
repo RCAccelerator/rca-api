@@ -2,7 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 
-SF_DOMAIN = os.environ["SF_DOMAIN"]
+try:
+    SF_DOMAIN = os.environ["SF_DOMAIN"]
+except KeyError:
+    raise ValueError("The SF_DOMAIN environment variable must be set") from None
+
+
 SF_URL = f"https://{SF_DOMAIN}"
 DEFAULT_MODEL = "gemini-2.5-flash"
 DEFAULT_SYSTEM_PROMPT = (

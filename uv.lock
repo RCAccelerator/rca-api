@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 
 [[package]]
@@ -813,13 +813,13 @@ dependencies = [
     { name = "httpx" },
     { name = "httpx-gssapi" },
     { name = "httpx-ws" },
+    { name = "llm" },
+    { name = "llm-gemini" },
     { name = "sqlalchemy" },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "llm" },
-    { name = "llm-gemini" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -832,13 +832,13 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx-gssapi", specifier = ">=0.4" },
     { name = "httpx-ws", specifier = ">=0.7.2" },
+    { name = "llm", specifier = ">=0.27.1" },
+    { name = "llm-gemini", specifier = ">=0.25" },
     { name = "sqlalchemy", specifier = ">=2.0.43" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "llm", specifier = ">=0.27.1" },
-    { name = "llm-gemini", specifier = ">=0.25" },
     { name = "mypy", specifier = ">=1.18.1" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "ruff", specifier = ">=0.11.12" },

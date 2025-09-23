@@ -2,7 +2,7 @@
 name = "rcav2"
 version = "0.1.0"
 license = "Apache-2.0"
-description = "RCA MCP"
+description = "MCP Tool used to identify, understand and deliver fast and accurate root cause analysis of Zuul CI Build failures."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,12 +12,12 @@ dependencies = [
     "httpx-gssapi>=0.4",
     "httpx-ws>=0.7.2",
     "sqlalchemy>=2.0.43",
+    "llm>=0.27.1",
+    "llm-gemini>=0.25",
 ]
 
 [dependency-groups]
 dev = [
-    "llm>=0.27.1",
-    "llm-gemini>=0.25",
     "mypy>=1.18.1",
     "pytest>=8.4.1",
     "ruff>=0.11.12",
@@ -29,3 +29,7 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 rcav2 = "rcav2.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/rca-mcp/rca-mcp"
+Repository = "https://github.com/rca-mcp/rca-mcp"

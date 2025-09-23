@@ -9,7 +9,7 @@ import rcav2.logjuicer
 import rcav2.env
 import rcav2.model
 import rcav2.prompt
-from rcav2.config import DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT
+from rcav2.config import DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT, COOKIE_FILE
 
 
 def usage():
@@ -23,7 +23,6 @@ def usage():
 
 
 async def run(args, env: rcav2.env.Env):
-    env = rcav2.env.Env(args.debug)
     if args.local_logjuicer:
         report = await rcav2.logjuicer.get_report(env, args.URL)
     else:
@@ -43,7 +42,7 @@ async def run(args, env: rcav2.env.Env):
 
 async def amain():
     args = usage()
-    env = rcav2.env.Env(args.debug)
+    env = rcav2.env.Env(args.debug, cookie_path=COOKIE_FILE)
     try:
         await run(args, env)
     finally:

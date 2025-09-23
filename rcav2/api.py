@@ -15,7 +15,7 @@ import rcav2.model
 import rcav2.prompt
 import rcav2.database
 from rcav2.worker import Pool, Worker, Job
-from rcav2.config import DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT
+from rcav2.config import DEFAULT_MODEL, DEFAULT_SYSTEM_PROMPT, DATABASE_FILE
 
 
 class RCAJob(Job):
@@ -61,9 +61,9 @@ class RCAJob(Job):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # setup
-    app.state.env = rcav2.env.Env(debug=True)
+    app.state.env = rcav2.env.Env(debug=True, cookie_path=None)
     app.state.worker_pool = Pool(2)
-    app.state.db = rcav2.database.create(".db.sqlite3")
+    app.state.db = rcav2.database.create(DATABASE_FILE)
     yield
     # teardown
     await app.state.worker_pool.stop()

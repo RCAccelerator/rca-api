@@ -1,8 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+
 import os
 import subprocess
+import httpx
 from .config import SF_URL
 from .env import Env
 
@@ -19,11 +21,14 @@ def ensure_kerberos():
                 cmd, input=pwd.encode("utf-8"), stdout=subprocess.PIPE
             ).check_returncode()
         else:
-            raise RuntimeError("No kerberos auth available")
+            raise RuntimeError("No kerberos auth available, please run kinit")
 
 
 async def get_oidc_cookie(env: Env):
-    (await env.httpx.get(SF_URL, auth=env.auth)).raise_for_status()
+    try:
+        (await env.httpx.get(SF_URL, auth=env.auth)).raise_for_status()
+    except httpx.ConnectError as e:
+        raise RuntimeError(f"Connection to {SF_URL} failed: {e}. ") from e
     return env.httpx.cookies["mod_auth_openidc_session"]
 
 

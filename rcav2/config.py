@@ -13,3 +13,8 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 DEFAULT_SYSTEM_PROMPT = (
     "You are a CI engineer, your goal is to find the RCA of this build failure."
 )
+CA_BUNDLE_PATH = os.environ.get(
+    "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+)
+COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
+DATABASE_FILE = os.environ.get("DATABASE_FILE", ".db.sqlite3")

@@ -8,20 +8,19 @@ This project uses [uv](https://docs.astral.sh/uv/) and [npm](https://www.npmjs.c
 
 ### uv
 
-On Fedora, you can install `uv` with:
+On Fedora, you can install it with:
 ```ShellSession
 sudo dnf install -y uv
 ```
 
 ### Node.js and npm
 
-Frontend development requires [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/). The required Node.js version is specified in the `.nvmrc` file. We recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to manage your Node.js versions.
+Frontend development requires [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/). You can install them using your system's package manager or by downloading them from the official [Node.js website](https://nodejs.org/).
 
-To use the correct version of Node.js, run the following command from the root of the project:
+On Fedora, you can install it with:
 ```ShellSession
-nvm use
+sudo dnf install -y nodejs
 ```
-If you don't have this version installed, you can install it with `nvm install`.
 
 ### Gemini API Key
 

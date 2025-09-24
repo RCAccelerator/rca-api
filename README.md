@@ -4,12 +4,26 @@ RCAv2 is a tool designed to assist CI engineers in determining the root cause of
 
 ## Prerequisites
 
-This project uses [uv](https://docs.astral.sh/uv/), which is required for managing dependencies and running the project.
+This project uses [uv](https://docs.astral.sh/uv/) and [npm](https://www.npmjs.com/) for managing dependencies and running the project.
 
-On Fedora, you can install it with:
+### uv
+
+On Fedora, you can install `uv` with:
 ```ShellSession
 sudo dnf install -y uv
 ```
+
+### Node.js and npm
+
+Frontend development requires [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/). The required Node.js version is specified in the `.nvmrc` file. We recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to manage your Node.js versions.
+
+To use the correct version of Node.js, run the following command from the root of the project:
+```ShellSession
+nvm use
+```
+If you don't have this version installed, you can install it with `nvm install`.
+
+### Gemini API Key
 
 This project requires access to gemini as it utilizes their llm.  The api key can be retrieved from [bitwarden](https://vault.bitwarden.com/).  You must be part of the Red Hat, Inc. vault to access the key. Please see https://redhat.service-now.com/help?id=kb_article_view&sysparm_article=KB0010984 for instructions.
 

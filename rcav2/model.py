@@ -4,7 +4,6 @@
 import json
 import llm
 from pydantic import BaseModel, Field
-import textwrap
 
 
 class RCAAnalysis(BaseModel):
@@ -40,29 +39,15 @@ class RCAAnalysis(BaseModel):
     )
 
 
-def convert_to_markdown(analysis: str) -> str:
-    """Convert an RCAAnalysis json string to properly formatted Markdown."""
-    output: list[str] = []
-    analysis = json.loads(analysis)
-    if isinstance(analysis, dict):
-        for key, value in analysis.items():
-            title = key.replace("_", " ").capitalize()
-            formatted_value = textwrap.dedent(value).strip()
-            output.append(f"- **{title}:** {formatted_value}")
-    return "\n".join(output)
-
-
 async def query(env, model, system, prompt):
     env.log.info("Analyzing build with %s using %s bytes", model, len(prompt))
     model = llm.get_async_model(model)
     response = model.prompt(prompt, system=system, schema=RCAAnalysis)
-    rca_analysis = await response.text()
+    rca_analysis_json_str = await response.text()
+    rca_analysis = json.loads(rca_analysis_json_str)
+
     if rca_analysis:
-        async for chunk in model.chain(
-            f"Convert the RCA below in JSON to Markdown: {rca_analysis}",
-            tools=[convert_to_markdown],
-        ):
-            yield (chunk, "chunk")
+        yield (rca_analysis, "report")
 
     usage = await response.usage()
     if usage:

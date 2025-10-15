@@ -1,6 +1,6 @@
-# Contributing to rca-mcp
+# Contributing to rca-api
 
-This document explains how to use rca-mcp standalone and how to validate a change.
+This document explains how to use rca-api standalone and how to validate a change.
 
 ## Prerequisites
 

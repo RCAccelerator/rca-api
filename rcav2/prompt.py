@@ -36,7 +36,15 @@ TEST_REPORT = dict(
         dict(
             source={"RawFile": {"Remote": [12, "example.com/zuul/overcloud.log"]}},
             anomalies=[
-                {"before": [], "anomaly": {"line": "oops", "pos": 42}, "after": []}
+                {
+                    "before": [],
+                    "anomaly": {
+                        "line": "oops",
+                        "pos": 42,
+                        "timestamp": "2024-10-24T15:53:23",
+                    },
+                    "after": [],
+                }
             ],
         )
     ],

@@ -18,7 +18,9 @@ from rcav2.report import Report
 class RCAAccelerator(dspy.Signature):
     """You are a CI engineer, your goal is to find the RCA of this build failure.
     You are given a description of the job and a list of log files. The log files are sorted chronologically based on the timestamp of the first error in each file. This means logs appearing earlier in the list contain earlier errors.
+
     Your investigation strategy should be as follows:
+
     1.  **Start with `job-output.txt`:** Use the `read_errors` tool on this file first to identify the final error or symptom of the failure.
     2.  **Trace back to the root cause:** The errors in `job-output.txt` are often just symptoms. The actual root cause likely occurred earlier. Use the sorted log file list to examine logs that came before `job-output.txt`. These earlier logs are critical for finding the initial point of failure.
     3.  **Follow the error trail:** Within each file you inspect, follow the sequence of errors to understand the full context of how the problem developed. Don't stop reading errors until the root cause is fully diagnosed.

@@ -14,7 +14,9 @@ class RCAAccelerator(dspy.Signature):
     """You are a CI engineer, your goal is to find the RCA of this build failure.
     You are given a description of the job, a list of log files, and a list of errors in those logfiles.
     The log files are sorted chronologically based on the timestamp of the first error in each file.
+
     Your investigation strategy should be as follows:
+
     1.  **Recognize Symptoms:** The errors in `job-output.txt` are often just symptoms. The actual root cause likely occurred earlier.
     2.  **Trace Back to the Root Cause:** Use the sorted log file list to examine logs that came before `job-output.txt`. These earlier logs are critical for finding the initial point of failure.
     3.  **Analyze All Evidence:** It is crucial that you analyze all the provided errors before drawing a conclusion. Do not stop at the first error you find.

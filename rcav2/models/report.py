@@ -9,6 +9,13 @@ class Evidence(BaseModel):
     source: str
 
 
+class JiraTicket(BaseModel):
+    key: str
+    url: str
+    summary: str
+
+
 class Report(BaseModel):
     description: str
     evidences: list[Evidence]
+    jira_tickets: list[JiraTicket] = []

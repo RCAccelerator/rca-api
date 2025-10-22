@@ -13,6 +13,28 @@ interface Tokens {
   output: number;
 }
 
+interface JiraTicket {
+  key: string;
+  url: string;
+  summary: string;
+}
+
+interface Evidence {
+  error: string;
+  source: string;
+}
+
+interface Report {
+  description: string;
+  evidences: Evidence[];
+  jira_tickets?: JiraTicket[];
+}
+
+interface JobInfo {
+  description?: string;
+  actions?: string[];
+}
+
 function Spinner() {
   return (
     <div className="flex justify-center items-center p-8">
@@ -22,7 +44,7 @@ function Spinner() {
   );
 }
 
-function Evidence({ error, source }) {
+function Evidence({ error, source }: Evidence) {
   return (
     <div>
       <div className="bg-slate-100">
@@ -39,15 +61,15 @@ export function RcaComponent(
   const [refresh, setRefresh] = useState(false);
   const [status, setStatus] = useState<string[]>([]);
   const [playbooks, setPlaybooks] = useState<string[]>([]);
-  const [jobInfo, setJobInfo] = useState(null);
-  const [report, setReport] = useState(null);
-  const [errors, setErrors] = useState([]);
+  const [jobInfo, setJobInfo] = useState<JobInfo | null>(null);
+  const [report, setReport] = useState<Report | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
   const [logjuicerUrl, setLogjuicerUrl] = useState("");
   const [usage, setUsage] = useState<Tokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const addError = (e) => setErrors((prev) => [...prev, e]);
+  const addError = (e: string) => setErrors((prev) => [...prev, e]);
 
   async function getReport() {
     setStatus([]);
@@ -259,6 +281,25 @@ export function RcaComponent(
                   </li>
                 ))}
               </ul>
+              {report.jira_tickets && report.jira_tickets.length > 0 && (
+                <>
+                  <h3 className="font-semibold pt-4">Related JIRA Tickets</h3>
+                  <ul className="list-none p-0 m-0 space-y-2">
+                    {report.jira_tickets.map((ticket, index) => (
+                      <li key={index} className="pt-1">
+                        <a
+                          href={ticket.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                        >
+                          {ticket.key} - {ticket.summary}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           )}
           {(jobInfo || playbooks.length > 0) && (

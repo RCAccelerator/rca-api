@@ -132,6 +132,6 @@ async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> No
     if job:
         await worker.emit(job.model_dump(), event="job")
 
-    rca_agent = rcav2.agent.react.make_agent(errors_report, worker)
+    rca_agent = rcav2.agent.react.make_agent(errors_report, worker, env)
     report = await rcav2.agent.react.call_agent(rca_agent, job, errors_report, worker)
     await worker.emit(report.model_dump(), event="report")

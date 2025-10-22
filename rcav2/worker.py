@@ -51,6 +51,12 @@ class CLIWorker(Worker):
             print(f"Report\n~~~~~~\n\n{body['description']}\n\nEvidences:\n")
             for evidence in body["evidences"]:
                 print(f"- {evidence['error']}\n  source: {evidence['source']}")
+
+            if body.get("jira_tickets"):
+                print("\nRelated JIRA Tickets:\n")
+                for ticket in body["jira_tickets"]:
+                    print(f"- {ticket['key']}: {ticket['summary']}")
+                    print(f"  {ticket['url']}")
         else:
             print(f"{event} - {body}")
 

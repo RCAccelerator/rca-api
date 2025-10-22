@@ -14,6 +14,8 @@ import rcav2.agent.ansible
 from rcav2.worker import Worker
 from rcav2.models.report import Report
 
+from jira import JIRAError
+
 
 class RCAAccelerator(dspy.Signature):
     """You are a CI engineer, your goal is to find the RCA of this build failure.
@@ -23,6 +25,23 @@ class RCAAccelerator(dspy.Signature):
     2.  **Trace back to the root cause:** The errors in `job-output.txt` are often just symptoms. The actual root cause likely occurred earlier. The earlier logs are critical for finding the initial point of failure.
     3.  **Follow the error trail:** Within each file you inspect, follow the sequence of errors to understand the full context of how the problem developed. The ultimate root cause is somewhere in the available logs. Use the `search_errors` tool to find all the evidences. Don't stop reading errors until the root cause is fully diagnosed.
     4.  **Synthesize your findings:** Connect the events from the early logs with the final failure shown in `job-output.txt` to build a complete and accurate root cause analysis.
+
+    After identifying the root cause, ALWAYS search for related Jira tickets to correlate with known issues:
+    1. Search for similar error messages - extract key error terms and search in Jira
+    2. Look for known bugs or issues that match the failure pattern
+    3. Find recent failures reported in the same area or component
+
+    Use search_jira_issues with proper JQL syntax. Examples:
+    - search_jira_issues('text ~ "cert-manager secrets not found"')
+    - search_jira_issues('summary ~ "timeout" AND text ~ "openstackcontrolplane"')
+    Remember: Use ~ operator with quoted strings for text searches!
+
+    IMPORTANT: Populate the jira_tickets field in your report with all relevant JIRA tickets you found.
+    For each ticket, include:
+    - key: The JIRA ticket key (e.g., "OSPCIX-1234")
+    - url: The full URL to the ticket
+    - summary: The ticket summary/title
+    Use the results from search_jira_issues to populate this field.
     """
 
     job: rcav2.agent.ansible.Job = dspy.InputField()
@@ -34,7 +53,7 @@ class RCAAccelerator(dspy.Signature):
     report: Report = dspy.OutputField()
 
 
-def make_agent(errors: rcav2.models.errors.Report, worker: Worker) -> dspy.Predict:
+def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.Predict:
     async def read_errors(source: str) -> list[rcav2.models.errors.Error]:
         """Read the errors contained in a source log, including the before after context"""
         await worker.emit(f"Checking {source}", "progress")
@@ -55,7 +74,76 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker) -> dspy.Predi
                     break
         return logfiles
 
-    return dspy.ReAct(RCAAccelerator, tools=[read_errors, search_errors])
+    async def search_jira_issues(
+        query: str, max_results: int | None = 50
+    ) -> list[dict[str, str | None]]:
+        """Searches jira issues using JQL (Jira query language).
+        Returns list of issues with key, url, summary, status, and description.
+        The 'url' field contains the full link to the JIRA ticket.
+        Returns 50 results by default, for more results set max_results.
+        Use the 'key' field from results with get_jira_issue for more details.
+        If JIRA_RCA_PROJECT is configured, automatically filters to that project.
+
+        JQL Query Syntax - IMPORTANT:
+        - Text search: text ~ "error message" (quotes required for phrases)
+        - Summary search: summary ~ "keyword"
+        - Description search: description ~ "error text"
+        - Multiple terms: summary ~ "cert-manager" AND text ~ "timeout"
+        - OR condition: summary ~ "error" OR description ~ "failure"
+
+        Valid operators: ~ (contains), !~, =, !=, IN, NOT IN
+        Always use ~ for text searches with quoted strings."""
+        if not env.jira_client:
+            await worker.emit(
+                "JIRA client not available. Set JIRA_URL and JIRA_API_KEY", "error"
+            )
+            return []
+
+        # Add project filter if configured
+        final_query = query
+        if env.jira_rca_project:
+            # If query doesn't already contain "project =", add it
+            if "project" not in query.lower():
+                # Support multiple projects (comma-separated)
+                projects = [p.strip() for p in env.jira_rca_project.split(",")]
+                if len(projects) == 1:
+                    final_query = f"project = {projects[0]} AND ({query})"
+                else:
+                    project_list = ", ".join(projects)
+                    final_query = f"project IN ({project_list}) AND ({query})"
+
+        await worker.emit(
+            f"Searching issues with query: {final_query}, max_results: {max_results}",
+            "progress",
+        )
+        try:
+            result = env.jira_client.search_issues(final_query, maxResults=max_results)
+            # Convert Issue objects to serializable dicts
+            jira_base_url = env.jira_client._options["server"]
+            result_list = []
+            for issue in result if result else []:
+                issue_dict = {
+                    "key": issue.key,
+                    "url": f"{jira_base_url}/browse/{issue.key}",
+                    "summary": getattr(issue.fields, "summary", None),
+                    "status": str(getattr(issue.fields, "status", None)),
+                    "description": getattr(issue.fields, "description", None),
+                }
+                result_list.append(issue_dict)
+
+            await worker.emit(
+                f"Found {len(result_list)} issues for query: {final_query}",
+                "progress",
+            )
+            return result_list
+        except JIRAError as e:
+            env.log.error(f"Failed to search issues with query '{final_query}': {e}")
+            await worker.emit(f"JIRA search failed: {e}", "error")
+            return []
+
+    return dspy.ReAct(
+        RCAAccelerator, tools=[read_errors, search_errors, search_jira_issues]
+    )
 
 
 async def call_agent(

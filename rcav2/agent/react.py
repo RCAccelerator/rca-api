@@ -5,6 +5,8 @@
 A next-gen rca agent that reads the errors as needed
 """
 
+from typing import Any
+
 import dspy  # type: ignore[import-untyped]
 
 import rcav2.errors
@@ -14,15 +16,29 @@ import rcav2.agent.zuul
 from rcav2.worker import Worker
 from rcav2.report import Report
 
+from jira import JIRAError
+
 
 class RCAAccelerator(dspy.Signature):
     """You are a CI engineer, your goal is to find the RCA of this build failure.
 
-    Your investigation strategy should be as follows:
-    1.  **Start with `job-output.txt`:** Use the `read_errors` tool on this file first to identify the final error or symptom of the failure.
-    2.  **Trace back to the root cause:** The errors in `job-output.txt` are often just symptoms. The actual root cause likely occurred earlier. The earlier logs are critical for finding the initial point of failure.
-    3.  **Follow the error trail:** Within each file you inspect, follow the sequence of errors to understand the full context of how the problem developed. Don't stop reading errors until the root cause is fully diagnosed.
-    4.  **Synthesize your findings:** Connect the events from the early logs with the final failure shown in `job-output.txt` to build a complete and accurate root cause analysis.
+    You are given a description of the job and the list of logs file.
+    Use the read_errors tool to identify the root cause.
+    Starts with the job-output.txt, and check the other logs to collect evidence.
+    Don't stop reading errors until the root cause is fully diagnosed.
+
+    After identifying the root cause, ALWAYS search for related Jira tickets to correlate with known issues:
+    1. Search for similar error messages - extract key error terms and search in Jira
+    2. Look for known bugs or issues that match the failure pattern
+    3. Find recent failures reported in the same area or component
+
+    Use search_jira_issues with JQL queries to find relevant tickets, then use get_jira_issue
+    to retrieve detailed information about promising matches.
+
+    IMPORTANT: At the end of your report description, include a "Related Jira Tickets" section.
+    List all relevant JIRA tickets you found as HTML links using this format:
+    <a href="url">KEY - Summary</a>
+    Use the 'url' field from search_jira_issues results. Include all relevant tickets.
     """
 
     job: rcav2.agent.zuul.Job = dspy.InputField()
@@ -34,7 +50,7 @@ class RCAAccelerator(dspy.Signature):
     report: Report = dspy.OutputField()
 
 
-def make_agent(errors: rcav2.errors.Report, worker: Worker) -> dspy.Predict:
+def make_agent(errors: rcav2.errors.Report, worker: Worker, env) -> dspy.Predict:
     async def read_errors(source: str) -> list[rcav2.errors.Error]:
         """Read the errors contained in a source log, including the before after context"""
         await worker.emit(f"Checking {source}", "progress")
@@ -43,7 +59,64 @@ def make_agent(errors: rcav2.errors.Report, worker: Worker) -> dspy.Predict:
                 return logfile.errors
         return []
 
-    return dspy.ReAct(RCAAccelerator, tools=[read_errors])
+    async def search_jira_issues(
+        query: str, max_results: int | None = 50
+    ) -> list[dict[str, Any]]:
+        """Searches jira issues using JQL (Jira query language).
+        Returns list of issues with key, url, summary, status, and description.
+        The 'url' field contains the full link to the JIRA ticket.
+        Returns 50 results by default, for more results set max_results.
+        Use the 'key' field from results with get_jira_issue for more details.
+        If JIRA_RCA_PROJECT is configured, automatically filters to that project."""
+        if not env.jira_client:
+            await worker.emit(
+                "JIRA client not available. Set JIRA_URL and JIRA_API_KEY", "error"
+            )
+            return []
+
+        # Add project filter if configured
+        final_query = query
+        if env.jira_rca_project:
+            # If query doesn't already contain "project =", add it
+            if "project" not in query.lower():
+                # Support multiple projects (comma-separated)
+                projects = [p.strip() for p in env.jira_rca_project.split(",")]
+                if len(projects) == 1:
+                    final_query = f"project = {projects[0]} AND ({query})"
+                else:
+                    project_list = ", ".join(projects)
+                    final_query = f"project IN ({project_list}) AND ({query})"
+
+        await worker.emit(
+            f"Searching issues with query: {final_query}, max_results: {max_results}",
+            "progress",
+        )
+        try:
+            result = env.jira_client.search_issues(final_query, maxResults=max_results)
+            # Convert Issue objects to serializable dicts
+            jira_base_url = env.jira_client._options["server"]
+            result_list = []
+            for issue in result if result else []:
+                issue_dict = {
+                    "key": issue.key,
+                    "url": f"{jira_base_url}/browse/{issue.key}",
+                    "summary": getattr(issue.fields, "summary", ""),
+                    "status": str(getattr(issue.fields, "status", "")),
+                    "description": getattr(issue.fields, "description", ""),
+                }
+                result_list.append(issue_dict)
+
+            await worker.emit(
+                f"Found {len(result_list)} issues for query: {final_query}",
+                "progress",
+            )
+            return result_list
+        except JIRAError as e:
+            env.log.error(f"Failed to search issues with query '{final_query}': {e}")
+            await worker.emit(f"JIRA search failed: {e}", "error")
+            return []
+
+    return dspy.ReAct(RCAAccelerator, tools=[read_errors, search_jira_issues])
 
 
 async def call_agent(

@@ -7,10 +7,10 @@ This module contains helpers to query the logjuicer API.
 
 import os
 
-from rcav2.errors import Report
+from rcav2.models.errors import Report
 from rcav2.env import Env
 from rcav2.worker import Worker
-import rcav2.errors
+import rcav2.models.errors
 
 
 def make_local_report(url: str) -> Report:
@@ -18,7 +18,7 @@ def make_local_report(url: str) -> Report:
     import json
 
     # This need: https://github.com/logjuicer/logjuicer/pull/178
-    return rcav2.errors.json_to_report(
+    return rcav2.models.errors.json_to_report(
         json.loads(
             subprocess.check_output(
                 ["logjuicer", "--report", "/dev/stdout", "errors", url]
@@ -85,7 +85,7 @@ async def do_get_remote_report(env: Env, url: str, worker: None | Worker) -> Rep
     # Step3: download report
     curl = f"{SF_URL}/logjuicer/api/report/{report_id}/json"
     report = (await env.httpx.get(curl, auth=env.auth)).raise_for_status().json()
-    return rcav2.errors.json_to_report(report)
+    return rcav2.models.errors.json_to_report(report)
 
 
 async def get_remote_report(env: Env, url: str, worker: None | Worker) -> Report:

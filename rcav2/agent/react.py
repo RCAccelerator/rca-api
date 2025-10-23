@@ -8,12 +8,11 @@ A next-gen rca agent that reads the errors as needed
 import dspy  # type: ignore[import-untyped]
 import re
 
-import rcav2.errors
-import rcav2.prompt
+import rcav2.models.errors
 import rcav2.model
 import rcav2.agent.zuul
 from rcav2.worker import Worker
-from rcav2.report import Report
+from rcav2.models.report import Report
 
 
 class RCAAccelerator(dspy.Signature):
@@ -35,8 +34,8 @@ class RCAAccelerator(dspy.Signature):
     report: Report = dspy.OutputField()
 
 
-def make_agent(errors: rcav2.errors.Report, worker: Worker) -> dspy.Predict:
-    async def read_errors(source: str) -> list[rcav2.errors.Error]:
+def make_agent(errors: rcav2.models.errors.Report, worker: Worker) -> dspy.Predict:
+    async def read_errors(source: str) -> list[rcav2.models.errors.Error]:
         """Read the errors contained in a source log, including the before after context"""
         await worker.emit(f"Checking {source}", "progress")
         for logfile in errors.logfiles:
@@ -62,7 +61,7 @@ def make_agent(errors: rcav2.errors.Report, worker: Worker) -> dspy.Predict:
 async def call_agent(
     agent: dspy.Predict,
     job: rcav2.agent.zuul.Job | None,
-    errors: rcav2.errors.Report,
+    errors: rcav2.models.errors.Report,
     worker: Worker,
 ) -> Report:
     if not job:

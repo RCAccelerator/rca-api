@@ -3,9 +3,9 @@
 
 import dspy  # type: ignore[import-untyped]
 
-import rcav2.errors
+import rcav2.models.errors
 import rcav2.agent.zuul
-from rcav2.report import Report
+from rcav2.models.report import Report
 from rcav2.worker import Worker
 
 
@@ -36,7 +36,7 @@ def make_agent() -> dspy.Predict:
 async def call_agent(
     agent: dspy.Predict,
     job: rcav2.agent.zuul.Job | None,
-    errors: rcav2.errors.Report,
+    errors: rcav2.models.errors.Report,
     worker: Worker,
 ) -> Report:
     if not job:
@@ -54,10 +54,10 @@ def keep_context(source: str) -> bool:
     return source == "job-output" or "ansible" in source
 
 
-def report_to_prompt(report: rcav2.errors.Report) -> str:
+def report_to_prompt(report: rcav2.models.errors.Report) -> str:
     """Convert a report to a LLM prompt
 
-    >>> report_to_prompt(rcav2.errors.json_to_report(TEST_REPORT))
+    >>> report_to_prompt(rcav2.models.errors.json_to_report(TEST_REPORT))
     '\\n## zuul/overcloud.log\\noops'
     """
     lines = []

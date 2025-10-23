@@ -15,7 +15,6 @@ import json
 import rcav2.logjuicer
 import rcav2.env
 import rcav2.model
-import rcav2.prompt
 import rcav2.database
 import rcav2.auth
 import rcav2.zuul

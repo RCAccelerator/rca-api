@@ -8,7 +8,7 @@ from pathlib import Path
 import rcav2.auth
 import rcav2.git
 from rcav2.env import Env
-from rcav2.zuul_info import ZuulInfo, JobInfo, ProjectInfo, ProviderInfo
+from rcav2.models.zuul_info import ZuulInfo, JobInfo, ProjectInfo, ProviderInfo
 
 
 async def fetch_weeder_export(env: Env) -> dict:

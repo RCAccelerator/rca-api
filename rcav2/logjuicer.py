@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module contains helpers to query the logjuicer API.
+"""
+
 import os
 
 from rcav2.errors import Report
@@ -24,6 +28,7 @@ def make_local_report(url: str) -> Report:
 
 
 async def wait_report(env: Env, wurl: str, report_id: int, worker: None | Worker):
+    """Wait for the report to be completed."""
     import httpx_ws
 
     wurl = f"{wurl}/logjuicer/wsapi/report/{report_id}"
@@ -54,6 +59,7 @@ async def wait_report(env: Env, wurl: str, report_id: int, worker: None | Worker
 
 
 async def do_get_remote_report(env: Env, url: str, worker: None | Worker) -> Report:
+    """Create and fetch a logjuicer report from the API (implementation)."""
     from rcav2.config import SF_URL
 
     # Step1: request report
@@ -83,6 +89,7 @@ async def do_get_remote_report(env: Env, url: str, worker: None | Worker) -> Rep
 
 
 async def get_remote_report(env: Env, url: str, worker: None | Worker) -> Report:
+    """Create and fetch a logjuicer report from the API (entrypoint)."""
     import rcav2.auth
     import httpx_ws
 
@@ -112,6 +119,7 @@ async def get_local_report(env: Env, url: str) -> Report:
 
 
 async def get_report(env: Env, url: str, worker: None | Worker) -> Report:
+    """Create a new logjuicer report."""
     if env.logjuicer_report:
         # eval report already available
         return env.logjuicer_report
@@ -119,11 +127,3 @@ async def get_report(env: Env, url: str, worker: None | Worker) -> Report:
         return await get_local_report(env, url)
     else:
         return await get_remote_report(env, url, worker)
-
-
-def dump_report(report: Report) -> str:
-    import json
-    import rcav2.errors
-
-    report_dict = rcav2.errors.report_to_json(report)
-    return json.dumps(report_dict, indent=2)

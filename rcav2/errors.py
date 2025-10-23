@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This module contains helper to pre-process a LogJuicer report.
+This module contains helpers to pre-process a LogJuicer report.
 """
 
 from pydantic import BaseModel

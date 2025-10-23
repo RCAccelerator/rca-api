@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module defines the model configuration.
+"""
+
 import dspy  # type: ignore[import-untyped]
 from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import os

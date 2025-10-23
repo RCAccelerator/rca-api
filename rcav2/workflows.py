@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module defines the RCA workflows.
+"""
+
 import json
 
 from rcav2.env import Env

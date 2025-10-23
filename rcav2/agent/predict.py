@@ -4,7 +4,6 @@
 import dspy  # type: ignore[import-untyped]
 
 import rcav2.errors
-import rcav2.prompt
 import rcav2.agent.zuul
 from rcav2.report import Report
 from rcav2.worker import Worker
@@ -31,7 +30,7 @@ class RCAAccelerator(dspy.Signature):
 
 
 def make_agent() -> dspy.Predict:
-    return dspy.Predict(RCAAccelerator, max_tokens=1024 * 1024)
+    return dspy.ChainOfThought(RCAAccelerator, max_tokens=1024 * 1024)
 
 
 async def call_agent(
@@ -48,3 +47,42 @@ async def call_agent(
     result = await agent.acall(job=job, errors=errors_report)
     await rcav2.model.emit_dspy_usage(result, worker)
     return result.report
+
+
+def keep_context(source: str) -> bool:
+    """Decide if the before/after lines should be kept"""
+    return source == "job-output" or "ansible" in source
+
+
+def report_to_prompt(report: rcav2.errors.Report) -> str:
+    """Convert a report to a LLM prompt
+
+    >>> report_to_prompt(rcav2.errors.json_to_report(TEST_REPORT))
+    '\\n## zuul/overcloud.log\\noops'
+    """
+    lines = []
+    for logfile in report.logfiles:
+        lines.append(f"\n## {logfile.source}")
+        context = keep_context(logfile.source)
+        for error in logfile.errors:
+            if context:
+                for line in error.before:
+                    lines.append(line)
+            lines.append(error.line)
+            if context:
+                for line in error.after:
+                    lines.append(line)
+    return "\n".join(lines)
+
+
+TEST_REPORT = dict(
+    target={"Zuul": {"job_name": "tox"}},
+    log_reports=[
+        dict(
+            source={"RawFile": {"Remote": [12, "example.com/zuul/overcloud.log"]}},
+            anomalies=[
+                {"before": [], "anomaly": {"line": "oops", "pos": 42}, "after": []}
+            ],
+        )
+    ],
+)

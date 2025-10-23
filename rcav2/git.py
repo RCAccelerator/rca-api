@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module contains helper to work with git.
+"""
+
 from pathlib import Path
 import urllib.parse
 import asyncio

@@ -17,6 +17,8 @@ class Base(DeclarativeBase):
 
 
 class Report(Base):
+    """The report table"""
+
     __tablename__ = "rca_reports"
 
     build: Mapped[str] = mapped_column(primary_key=True)
@@ -25,6 +27,8 @@ class Report(Base):
 
 
 class Job(Base):
+    """The job table"""
+
     __tablename__ = "job_descriptions"
 
     name: Mapped[str] = mapped_column(primary_key=True)
@@ -33,26 +37,31 @@ class Job(Base):
 
 
 def create(path: str) -> Engine:
+    """Create the engine."""
     engine = create_engine(f"sqlite:///{path}", echo=True)
     Base.metadata.create_all(engine)
     return engine
 
 
 def get_job(engine: Engine, name: str) -> str | None:
+    """Get a job description from the database."""
     with Session(engine) as session:
         try:
             job = session.scalars(select(Job).where(Job.name == name)).one()
             age = datetime.datetime.now() - job.created_at
             if age.total_seconds() > 3600 * 24:
+                # Ignore old job
                 return None
             return job.body
         except NoResultFound:
+            # Prepare a new entry
             session.add(Job(name=name))
             session.commit()
             return None
 
 
 def set_job(engine: Engine, name: str, body: str):
+    """Store a job description in the database."""
     with Session(engine) as session:
         session.execute(
             update(Job)
@@ -63,11 +72,13 @@ def set_job(engine: Engine, name: str, body: str):
 
 
 def get(engine: Engine, build: str) -> str | None:
+    """Get a rca report from the database."""
     with Session(engine) as session:
         try:
             report = session.scalars(select(Report).where(Report.build == build)).one()
             return report.events
         except NoResultFound:
+            # Prepare a new entry
             report = Report(build=build)
             session.add(report)
             session.commit()
@@ -75,6 +86,7 @@ def get(engine: Engine, build: str) -> str | None:
 
 
 def set(engine: Engine, build: str, events: str):
+    """Store a rca report in the database."""
     with Session(engine) as session:
         session.execute(
             update(Report).where(Report.build == build).values(events=events)

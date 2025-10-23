@@ -1,6 +1,9 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module handles the authentication logic.
+"""
 
 import os
 import subprocess
@@ -26,6 +29,7 @@ def ensure_kerberos():
 
 
 async def get_oidc_cookie(env: Env):
+    """Fetch the OIDC cookie."""
     try:
         (await env.httpx.get(SF_URL, auth=env.auth)).raise_for_status()
     except httpx.ConnectError as e:
@@ -34,6 +38,7 @@ async def get_oidc_cookie(env: Env):
 
 
 async def ensure_cookie(env: Env):
+    """Ensure the OIDC cookie is fresh in the env."""
     now = time.time()
     if not env.cookie or now - env.cookie_age > (23.8 * 3600):
         ensure_kerberos()

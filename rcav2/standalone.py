@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+A standalone FastApi, used by the `make serve` rule.
+"""
+
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI
 

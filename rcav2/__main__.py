@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module is the CLI entrypoint for debugging purpose.
+"""
+
 import argparse
 import asyncio
 
@@ -19,7 +23,7 @@ def usage():
     return parser.parse_args()
 
 
-async def amain() -> None:
+async def run_cli() -> None:
     args = usage()
     env = rcav2.env.Env(args.debug, cookie_path=COOKIE_FILE)
     try:
@@ -40,4 +44,4 @@ async def amain() -> None:
 
 
 def main():
-    asyncio.run(amain())
+    asyncio.run(run_cli())

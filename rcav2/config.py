@@ -1,5 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
+
+"""
+This module defines the system configuration from the process os.environ.
+"""
+
 import os
 
 try:

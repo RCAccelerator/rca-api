@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module defines the global environment shared by the other modules.
+"""
+
 import ssl
 import httpx
 import pathlib

@@ -1,6 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+This module defines the FastAPI handlers.
+"""
+
 from fastapi import FastAPI, Request
 from fastapi.responses import (
     StreamingResponse,
@@ -101,6 +105,7 @@ async def job_watch(request: Request, name: str):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Setup the fastapi app.state"""
     # setup
     app.state.env = rcav2.env.Env(debug=True, cookie_path=None)
     app.state.worker_pool = Pool(2)
@@ -112,11 +117,12 @@ async def lifespan(app: FastAPI):
 
 
 def get_pool(request: Request) -> Pool:
+    """Return the worker pool."""
     return request.app.state.worker_pool
 
 
 async def get(request: Request, build: str):
-    """Get or submit the build"""
+    """Get or submit the build."""
     pool = get_pool(request)
     if pool.pending.get(build):
         return dict(status="PENDING")
@@ -128,6 +134,7 @@ async def get(request: Request, build: str):
 
 
 async def do_watch(request, job):
+    """The watch handler, to follow the progress of a job."""
     watcher = await get_pool(request).watch(job)
     if not watcher:
         # The report is now completed, redirect the client to the static page

@@ -4,7 +4,7 @@
 import dspy  # type: ignore[import-untyped]
 
 import rcav2.models.errors
-import rcav2.agent.zuul
+import rcav2.agent.ansible
 from rcav2.models.report import Report
 from rcav2.worker import Worker
 
@@ -21,7 +21,7 @@ class RCAAccelerator(dspy.Signature):
     4.  **Identify the Root Cause:** After a full analysis, identify the definitive root cause.
     """
 
-    job: rcav2.agent.zuul.Job = dspy.InputField()
+    job: rcav2.agent.ansible.Job = dspy.InputField()
 
     # TODO: provide tools instead to access the raw reports. Then remove the errors input
     errors: str = dspy.InputField()
@@ -35,15 +35,15 @@ def make_agent() -> dspy.Predict:
 
 async def call_agent(
     agent: dspy.Predict,
-    job: rcav2.agent.zuul.Job | None,
+    job: rcav2.agent.ansible.Job | None,
     errors: rcav2.models.errors.Report,
     worker: Worker,
 ) -> Report:
     if not job:
-        job = rcav2.agent.zuul.Job(description="", actions=[])
+        job = rcav2.agent.ansible.Job(description="", actions=[])
     await worker.emit("Calling RCAAccelerator", "progress")
     agent.set_lm(rcav2.model.get_lm("gemini-2.5-pro", max_tokens=1024 * 1024))
-    errors_report = rcav2.prompt.report_to_prompt(errors)
+    errors_report = report_to_prompt(errors)
     result = await agent.acall(job=job, errors=errors_report)
     await rcav2.model.emit_dspy_usage(result, worker)
     return result.report

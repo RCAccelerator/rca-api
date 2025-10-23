@@ -31,7 +31,6 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 rcav2 = "rcav2.__main__:main"
-zuul-tool = "rcav2.zuul:main"
 
 [project.urls]
 Homepage = "https://github.com/rca-mcp/rca-mcp"

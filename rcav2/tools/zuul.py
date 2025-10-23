@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 import rcav2.auth
-import rcav2.git
+import rcav2.tools.git
 from rcav2.env import Env
 from rcav2.models.zuul_info import ZuulInfo, JobInfo, ProjectInfo, ProviderInfo
 
@@ -63,7 +63,7 @@ async def fetch_job_repos(info: ZuulInfo, job_name: str):
         return
     if url := info.project_git(job.project):
         print(f"{job_name}: {url}")
-        await rcav2.git.ensure_repo(url)
+        await rcav2.tools.git.ensure_repo(url)
     if parent := job.parent:
         await fetch_job_repos(info, parent)
 
@@ -92,7 +92,7 @@ async def get_job_playbooks(info: ZuulInfo, job_name: str):
             print(f"Unknown job: {job_name}")
             break
         if url := info.project_git(job.project):
-            path = await rcav2.git.ensure_repo(url)
+            path = await rcav2.tools.git.ensure_repo(url)
             if job_def := read_job(path / job.path, job_name):
                 plays.extend(
                     map(lambda play: path / play, as_list(job_def.get("run", [])))

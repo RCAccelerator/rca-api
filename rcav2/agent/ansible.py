@@ -5,7 +5,7 @@ import dspy  # type: ignore[import-untyped]
 from pydantic import BaseModel
 import glob
 
-import rcav2.git
+import rcav2.tools.git
 from rcav2.worker import Worker
 
 
@@ -23,7 +23,7 @@ class DSPyAnsibleOracle(dspy.Signature):
     job: Job = dspy.OutputField()
 
 
-root = rcav2.git.workspace_root.expanduser()
+root = rcav2.tools.git.workspace_root.expanduser()
 
 
 def make_agent(worker: Worker) -> dspy.ReAct:
@@ -60,14 +60,14 @@ async def main() -> None:
     """A test experiment"""
     import sys
     import json
-    import rcav2.zuul
+    import rcav2.tools.zuul
     import rcav2.model
     from rcav2.worker import CLIWorker
 
     job = sys.argv[1]
     export = json.load(open(".zuul-export.json"))
-    info = rcav2.zuul.read_weeder_export(export)
-    plays = await rcav2.zuul.get_job_playbooks(info, job)
+    info = rcav2.tools.zuul.read_weeder_export(export)
+    plays = await rcav2.tools.zuul.get_job_playbooks(info, job)
     if not plays:
         print("Couldn't find job playbook")
         return

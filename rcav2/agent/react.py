@@ -10,7 +10,7 @@ import re
 
 import rcav2.models.errors
 import rcav2.model
-import rcav2.agent.zuul
+import rcav2.agent.ansible
 from rcav2.worker import Worker
 from rcav2.models.report import Report
 
@@ -25,7 +25,7 @@ class RCAAccelerator(dspy.Signature):
     4.  **Synthesize your findings:** Connect the events from the early logs with the final failure shown in `job-output.txt` to build a complete and accurate root cause analysis.
     """
 
-    job: rcav2.agent.zuul.Job = dspy.InputField()
+    job: rcav2.agent.ansible.Job = dspy.InputField()
 
     errors: dict[str, int] = dspy.InputField(
         desc="list of source and their error count"
@@ -43,11 +43,11 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker) -> dspy.Predi
                 return logfile.errors
         return []
 
-    async def search_errors(regex: str) -> list[rcav2.errors.LogFile]:
+    async def search_errors(regex: str) -> list[rcav2.models.errors.LogFile]:
         """Search in the logs using a regular expression"""
         await worker.emit(f"Search {regex}", "progress")
         reg = re.compile(regex, re.I)
-        logfiles: list[rcav2.errors.LogFile] = []
+        logfiles: list[rcav2.models.errors.LogFile] = []
         for logfile in errors.logfiles:
             for error in logfile.errors:
                 if reg.search(error.line):
@@ -60,12 +60,12 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker) -> dspy.Predi
 
 async def call_agent(
     agent: dspy.Predict,
-    job: rcav2.agent.zuul.Job | None,
+    job: rcav2.agent.ansible.Job | None,
     errors: rcav2.models.errors.Report,
     worker: Worker,
 ) -> Report:
     if not job:
-        job = rcav2.agent.zuul.Job(description="", actions=[])
+        job = rcav2.agent.ansible.Job(description="", actions=[])
     await worker.emit("Calling RCAAccelerator", "progress")
     errors_count = dict()
     for logfile in errors.logfiles:

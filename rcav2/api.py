@@ -40,7 +40,7 @@ class RCAJob(Job):
 
     async def run(self, worker: Worker) -> None:
         try:
-            await rcav2.workflows.rca_predict(self.env, self.db, self.url, worker)
+            await rcav2.workflows.rca_react(self.env, self.db, self.url, worker)
             await worker.emit("completed", event="status")
         except Exception as e:
             self.env.log.exception("Job failed")

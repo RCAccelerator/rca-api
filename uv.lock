@@ -293,12 +293,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dependency"
-version = "0.0.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/dc/f2/5acb663164b83d557b63b8fb0e0e19416f96eba4398c21273b7302d486f2/dependency-0.0.3.tar.gz", hash = "sha256:41c26885d28a71a07e4605cdfa564b73a49fe9b29a4479207e14c7fda0e39d64", size = 3422, upload-time = "2017-07-18T12:50:42.287Z" }
-
-[[package]]
 name = "diskcache"
 version = "5.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1631,7 +1625,6 @@ name = "rcav2"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "dependency" },
     { name = "dspy" },
     { name = "fastapi", extra = ["standard"] },
     { name = "httpx" },
@@ -1653,7 +1646,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dependency", specifier = ">=0.0.3" },
     { name = "dspy", specifier = ">=3.0.3" },
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "fastapi", extras = ["standard"] },

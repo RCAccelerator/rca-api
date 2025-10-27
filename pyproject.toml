@@ -15,7 +15,6 @@ dependencies = [
     "pyyaml>=6.0.2",
     "dspy>=3.0.3",
     "opik>=0.1.0",
-    "dependency>=0.0.3",
     "jira>=3.10.5",
 ]
 

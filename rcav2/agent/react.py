@@ -6,7 +6,6 @@ A next-gen rca agent that reads the errors as needed
 """
 
 import dspy  # type: ignore[import-untyped]
-import re
 
 import rcav2.models.errors
 import rcav2.model
@@ -33,6 +32,10 @@ class RCAAccelerator(dspy.Signature):
     - search_jira_issues('text ~ "cert-manager secrets not found"')
     - search_jira_issues('summary ~ "timeout" AND text ~ "openstackcontrolplane"')
     Remember: Use ~ operator with quoted strings for text searches!
+
+    You can also search for information on Slack to find discussions related to the failure:
+    - Use `search_slack_messages` to search for error messages or keywords.
+    - Example: `search_slack_messages('cert-manager secrets not found')`
 
     IMPORTANT: Populate the jira_tickets field in your report with all relevant JIRA tickets you found.
     For each ticket, include:
@@ -91,7 +94,29 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.
         )
         return env.jira.search_jira_issues(query, max_results)
 
-    return dspy.ReAct(RCAAccelerator, tools=[read_errors, search_jira_issues])
+    async def search_slack_messages(
+        query: str, count: int | None = 20
+    ) -> list[dict[str, str | None]]:
+        """Searches slack messages.
+        Returns list of messages with text, user, permalink, and channel.
+        Returns 20 results by default, for more results set count.
+        """
+        if not env.slack:
+            await worker.emit(
+                "Slack client not available. Set SLACK_API_KEY and SLACK_SEARCH_CHANNELS",
+                "error",
+            )
+            return []
+
+        await worker.emit(
+            f"Searching slack with query: {query}, count: {count}",
+            "progress",
+        )
+        return env.slack.search_messages(query, count)
+
+    return dspy.ReAct(
+        RCAAccelerator, tools=[read_errors, search_jira_issues, search_slack_messages]
+    )
 
 
 async def call_agent(

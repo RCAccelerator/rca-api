@@ -13,6 +13,7 @@ import time
 from httpx_gssapi import HTTPSPNEGOAuth, OPTIONAL  # type: ignore
 import rcav2.models.errors
 from rcav2.tools.jira_client import Jira
+from rcav2.tools.slack import SlackClient
 from rcav2.models.zuul_info import ZuulInfo
 from rcav2.config import (
     SF_DOMAIN,
@@ -20,6 +21,8 @@ from rcav2.config import (
     JIRA_URL,
     JIRA_API_KEY,
     JIRA_RCA_PROJECTS,
+    SLACK_API_KEY,
+    SLACK_SEARCH_CHANNELS,
 )
 
 
@@ -39,10 +42,16 @@ class Env:
         self.auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         self.log = logging.getLogger("rcav2")
         self.jira: Jira | None = None
+        self.slack: SlackClient | None = None
 
         # Initialize JIRA client if credentials are available
         if JIRA_URL and JIRA_API_KEY and JIRA_RCA_PROJECTS:
             self.jira = Jira(JIRA_URL, JIRA_API_KEY, JIRA_RCA_PROJECTS.split(","))
+
+        # Initialize Slack client if credentials are available
+        if SLACK_API_KEY and SLACK_SEARCH_CHANNELS:
+            channels = SLACK_SEARCH_CHANNELS.split(",")
+            self.slack = SlackClient(SLACK_API_KEY, channels)
 
     def close(self):
         if self.cookie and self.cookie_path:

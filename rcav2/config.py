@@ -20,6 +20,10 @@ JIRA_API_KEY = os.environ.get("JIRA_API_KEY")
 # Comma-separated list of projects to search for related tickets during RCA
 JIRA_RCA_PROJECTS = os.environ.get("JIRA_RCA_PROJECTS")
 
+# Slack configuration (optional - only needed if using slack tools)
+SLACK_API_KEY = os.environ.get("SLACK_API_KEY")
+SLACK_SEARCH_CHANNELS = os.environ.get("SLACK_SEARCH_CHANNELS")
+
 CA_BUNDLE_PATH = os.environ.get(
     "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
 )

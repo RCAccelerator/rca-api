@@ -12,13 +12,14 @@ import logging
 import time
 from httpx_gssapi import HTTPSPNEGOAuth, OPTIONAL  # type: ignore
 import rcav2.models.errors
+from rcav2.tools.jira_client import Jira
 from rcav2.models.zuul_info import ZuulInfo
 from rcav2.config import (
     SF_DOMAIN,
     CA_BUNDLE_PATH,
     JIRA_URL,
     JIRA_API_KEY,
-    JIRA_RCA_PROJECT,
+    JIRA_RCA_PROJECTS,
 )
 
 
@@ -37,18 +38,11 @@ class Env:
         self.httpx = make_httpx_client(cookie_path)
         self.auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         self.log = logging.getLogger("rcav2")
+        self.jira: Jira | None = None
 
         # Initialize JIRA client if credentials are available
-        self.jira_client = None
-        self.jira_rca_project = JIRA_RCA_PROJECT
-        if JIRA_URL and JIRA_API_KEY:
-            try:
-                from jira import JIRA
-
-                self.jira_client = JIRA(server=JIRA_URL, token_auth=JIRA_API_KEY)
-                self.log.info(f"JIRA client initialized for {JIRA_URL}")
-            except Exception as e:
-                self.log.warning(f"Failed to initialize JIRA client: {e}")
+        if JIRA_URL and JIRA_API_KEY and JIRA_RCA_PROJECTS:
+            self.jira = Jira(JIRA_URL, JIRA_API_KEY, JIRA_RCA_PROJECTS.split(","))
 
     def close(self):
         if self.cookie and self.cookie_path:

@@ -14,8 +14,6 @@ import rcav2.agent.ansible
 from rcav2.worker import Worker
 from rcav2.models.report import Report
 
-from jira import JIRAError
-
 
 class RCAAccelerator(dspy.Signature):
     """You are a CI engineer, your goal is to find the RCA of this build failure.
@@ -93,53 +91,17 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.
 
         Valid operators: ~ (contains), !~, =, !=, IN, NOT IN
         Always use ~ for text searches with quoted strings."""
-        if not env.jira_client:
+        if not env.jira:
             await worker.emit(
                 "JIRA client not available. Set JIRA_URL and JIRA_API_KEY", "error"
             )
             return []
 
-        # Add project filter if configured
-        final_query = query
-        if env.jira_rca_project:
-            # If query doesn't already contain "project =", add it
-            if "project" not in query.lower():
-                # Support multiple projects (comma-separated)
-                projects = [p.strip() for p in env.jira_rca_project.split(",")]
-                if len(projects) == 1:
-                    final_query = f"project = {projects[0]} AND ({query})"
-                else:
-                    project_list = ", ".join(projects)
-                    final_query = f"project IN ({project_list}) AND ({query})"
-
         await worker.emit(
-            f"Searching issues with query: {final_query}, max_results: {max_results}",
+            f"Searching issues with query: {query}, max_results: {max_results}",
             "progress",
         )
-        try:
-            result = env.jira_client.search_issues(final_query, maxResults=max_results)
-            # Convert Issue objects to serializable dicts
-            jira_base_url = env.jira_client._options["server"]
-            result_list = []
-            for issue in result if result else []:
-                issue_dict = {
-                    "key": issue.key,
-                    "url": f"{jira_base_url}/browse/{issue.key}",
-                    "summary": getattr(issue.fields, "summary", None),
-                    "status": str(getattr(issue.fields, "status", None)),
-                    "description": getattr(issue.fields, "description", None),
-                }
-                result_list.append(issue_dict)
-
-            await worker.emit(
-                f"Found {len(result_list)} issues for query: {final_query}",
-                "progress",
-            )
-            return result_list
-        except JIRAError as e:
-            env.log.error(f"Failed to search issues with query '{final_query}': {e}")
-            await worker.emit(f"JIRA search failed: {e}", "error")
-            return []
+        return env.jira.search_jira_issues(query, max_results)
 
     return dspy.ReAct(
         RCAAccelerator, tools=[read_errors, search_errors, search_jira_issues]

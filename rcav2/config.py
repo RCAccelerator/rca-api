@@ -17,9 +17,9 @@ SF_URL = f"https://{SF_DOMAIN}"
 # JIRA configuration (optional - only needed if using JIRA tools)
 JIRA_URL = os.environ.get("JIRA_URL")
 JIRA_API_KEY = os.environ.get("JIRA_API_KEY")
-JIRA_RCA_PROJECT = os.environ.get(
-    "JIRA_RCA_PROJECT"
-)  # Comma-separated list of projects to search for related tickets during RCA
+# Comma-separated list of projects to search for related tickets during RCA
+JIRA_RCA_PROJECTS = os.environ.get("JIRA_RCA_PROJECTS")
+
 CA_BUNDLE_PATH = os.environ.get(
     "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
 )

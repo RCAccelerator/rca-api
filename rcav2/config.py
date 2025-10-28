@@ -29,7 +29,10 @@ CA_BUNDLE_PATH = os.environ.get(
 )
 COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
 DATABASE_FILE = os.environ.get("DATABASE_FILE", ".db.sqlite3")
-JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE")
+
+# Use default additional description if the env var is not set
+file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "job-description.txt")
+JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE", file_path)
 
 # Opik configuration
 OPIK_API_KEY = os.environ.get("OPIK_API_KEY")

@@ -1,0 +1,9 @@
+This is a description of the log files.  A good place to start is the job-output.txt or job-output.txt.gz (whichever is present), which is the main log file for the Zuul build.
+
+If there is no logs/controller-0 directory, most likely there was a failure in preparing the OpenShift environment. In this case look in logs/hypervisor/ci-framework-data/logs directory to identify the root cause.
+
+Otherwise we probably hit the issue in deploying the OpenStack environment. The follow-on logs are in logs/controller-0/ci-framework-data/logs directory in the files with names starting with “ansible” word, such as the ansible.log, ansible-deploy-architecture.log or ansible-post-deployment.log.gz - which will tell you at which Ansible task the build failed. In the same directory there are other log files that may provide more information about specific tasks.
+
+If there was a failure during control-plane or data-plane deployment, it is useful to look at the state of the kubernetes resources in the openstack namespace. The logs for all the pods, jobs, deployments, crs, etc., are all collected in the openstack-must-gather directory, located under logs/controller-0/ci-framework-data/logs/openstack-must-gather path.
+
+In particular, it is useful to look first at all_resources.log and events.log files under …/openstack-must-gather/latest/namespaces/openstack path to see which resources may have failed. For the detailed information about the failure reasons check all other files located in the openstack-must-gather directory, for example in: logs/controller-0/ci-framework-data/logs/openstack-must-gather/latest/namespaces/openstack/pods/ directory.

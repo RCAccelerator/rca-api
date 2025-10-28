@@ -7,6 +7,8 @@ This module is the CLI entrypoint for debugging purpose.
 
 import argparse
 import asyncio
+import re
+import os
 
 import rcav2.env
 import rcav2.model
@@ -26,6 +28,8 @@ def usage():
 async def run_cli() -> None:
     args = usage()
     env = rcav2.env.Env(args.debug, cookie_path=COOKIE_FILE)
+    if ignore_str := os.environ.get("RCA_IGNORE_LINES"):
+        env.ignore_lines = re.compile(ignore_str)
     try:
         # Prepare dspy
         rcav2.model.init_dspy()

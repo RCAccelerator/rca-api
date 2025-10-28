@@ -122,8 +122,17 @@ async def get_report(env: Env, url: str, worker: None | Worker) -> Report:
     """Create a new logjuicer report."""
     if env.logjuicer_report:
         # eval report already available
-        return env.logjuicer_report
+        report = env.logjuicer_report
     if os.environ.get("LOGJUICER_LOCAL"):
-        return await get_local_report(env, url)
+        report = await get_local_report(env, url)
     else:
-        return await get_remote_report(env, url, worker)
+        report = await get_remote_report(env, url, worker)
+    if ignore_lines := env.ignore_lines:
+        for logfile in report.logfiles:
+            logfile.errors = list(
+                filter(
+                    lambda err: not ignore_lines.search(err.line),
+                    logfile.errors,
+                )
+            )
+    return report

@@ -5,13 +5,45 @@
 This module defines the model configuration.
 """
 
-import dspy  # type: ignore[import-untyped]
-from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import os
 
+import dspy  # type: ignore[import-untyped]
+from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import opik
 from opik.integrations.dspy.callback import OpikCallback
+
 from rcav2.config import OPIK_PROJECT_NAME
+
+
+class TraceManager:
+    def __init__(self, workflow: str, url: str):
+        if os.environ.get("OPIK_DISABLED", "false").lower() == "true" or os.environ.get(
+            "DSPY_DEBUG"
+        ):
+            self.enabled = False
+        else:
+            self.enabled = True
+            build_id = url.split("/")[-1] if "/" in url else "unknown"
+            trace_name = f"RCA {workflow.title()} - Build {build_id}"
+            metadata = {
+                "build_url": url,
+                "build_id": build_id,
+                "workflow_type": workflow,
+            }
+            tags = ["rca-mcp", workflow]
+            self.manager = opik.start_as_current_trace(
+                trace_name, metadata=metadata, tags=tags, project_name=OPIK_PROJECT_NAME
+            )
+
+    def __enter__(self):
+        if self.enabled:
+            return self.manager.__enter__()
+        return None
+
+    def __exit__(self, *args):
+        if self.enabled:
+            return self.manager.__exit__(*args)
+        return False
 
 
 def get_lm(name: str, max_tokens: int) -> dspy.LM:

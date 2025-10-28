@@ -6,7 +6,6 @@ This module defines the RCA workflows.
 """
 
 import json
-import opik
 
 from rcav2.env import Env
 from rcav2.database import Engine
@@ -14,6 +13,7 @@ from rcav2.worker import Worker
 from rcav2.config import JOB_DESCRIPTION_FILE
 from rcav2.agent.ansible import Job
 from rcav2.models.report import Report
+from rcav2.model import TraceManager
 
 import rcav2.tools.logjuicer
 import rcav2.tools.zuul
@@ -115,22 +115,7 @@ async def rca_predict(env: Env, db: Engine | None, url: str, worker: Worker) -> 
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    # Create a trace context for the entire workflow
-    build_id = url.split("/")[-1] if "/" in url else "unknown"
-    trace_name = f"RCA Predict - Build {build_id}"
-    metadata = {
-        "build_url": url,
-        "build_id": build_id,
-        "workflow_type": "predict",
-    }
-    tags = ["rca-mcp", "predict"]
-
-    # Use the same project name as configured for DSPy
-    from rcav2.config import OPIK_PROJECT_NAME
-
-    with opik.start_as_current_trace(
-        trace_name, metadata=metadata, tags=tags, project_name=OPIK_PROJECT_NAME
-    ):
+    with TraceManager("predict", url):
         await worker.emit(f"Describing job {errors_report.target}...", event="progress")
         job = await describe_job(env, db, errors_report.target, worker)
         if job:
@@ -151,22 +136,7 @@ async def rca_multi(env: Env, db: Engine | None, url: str, worker: Worker) -> No
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    # Create a trace context for the entire workflow
-    build_id = url.split("/")[-1] if "/" in url else "unknown"
-    trace_name = f"RCA Multi - Build {build_id}"
-    metadata = {
-        "build_url": url,
-        "build_id": build_id,
-        "workflow_type": "multi",
-    }
-    tags = ["rca-mcp", "multi"]
-
-    # Use the same project name as configured for DSPy
-    from rcav2.config import OPIK_PROJECT_NAME
-
-    with opik.start_as_current_trace(
-        trace_name, metadata=metadata, tags=tags, project_name=OPIK_PROJECT_NAME
-    ):
+    with TraceManager("multi", url):
         # Step1: Getting build description
         await worker.emit(f"Describing job {errors_report.target}...", event="progress")
         job = await describe_job(env, db, errors_report.target, worker)
@@ -200,22 +170,7 @@ async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> No
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    # Create a trace context for the entire workflow
-    build_id = url.split("/")[-1] if "/" in url else "unknown"
-    trace_name = f"RCA React - Build {build_id}"
-    metadata = {
-        "build_url": url,
-        "build_id": build_id,
-        "workflow_type": "react",
-    }
-    tags = ["rca-mcp", "react"]
-
-    # Use the same project name as configured for DSPy
-    from rcav2.config import OPIK_PROJECT_NAME
-
-    with opik.start_as_current_trace(
-        trace_name, metadata=metadata, tags=tags, project_name=OPIK_PROJECT_NAME
-    ):
+    with TraceManager("react", url):
         await worker.emit(f"Describing job {errors_report.target}...", event="progress")
         job = await describe_job(env, db, errors_report.target, worker)
         if job:

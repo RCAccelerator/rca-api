@@ -34,7 +34,7 @@ async def get_oidc_cookie(env: Env):
         (await env.httpx.get(SF_URL, auth=env.auth)).raise_for_status()
     except httpx.ConnectError as e:
         raise RuntimeError(f"Connection to {SF_URL} failed: {e}. ") from e
-    return env.httpx.cookies["mod_auth_openidc_session"]
+    return env.httpx.cookies.get("mod_auth_openidc_session")
 
 
 async def ensure_cookie(env: Env):

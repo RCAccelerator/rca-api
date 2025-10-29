@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 import json
 
 import rcav2.tools.logjuicer
-import rcav2.env
+from rcav2.env import Env
 import rcav2.model
 import rcav2.database
 import rcav2.auth
@@ -26,8 +26,9 @@ from rcav2.config import DATABASE_FILE
 class RCAJob(Job):
     """Perform RCA on the given build URL"""
 
-    def __init__(self, env: rcav2.env.Env, db: rcav2.database.Engine, url: str):
+    def __init__(self, env: Env, db: rcav2.database.Engine, workflow: str, url: str):
         self.url = url
+        self.workflow = workflow
         self.env = env
         self.db = db
 
@@ -36,11 +37,13 @@ class RCAJob(Job):
 
     @property
     def job_key(self) -> str:
-        return self.url
+        return f"{self.workflow}-${self.url}"
 
     async def run(self, worker: Worker) -> None:
         try:
-            await rcav2.workflows.rca_react(self.env, self.db, self.url, worker)
+            await rcav2.workflows.run_workflow(
+                self.env, self.db, self.workflow, self.url, worker
+            )
             await worker.emit("completed", event="status")
         except Exception as e:
             self.env.log.exception("Job failed")
@@ -57,7 +60,7 @@ class RCAJob(Job):
 class ZuulJob(Job):
     """Discover Job definition"""
 
-    def __init__(self, env: rcav2.env.Env, db: rcav2.database.Engine, name: str):
+    def __init__(self, env: Env, db: rcav2.database.Engine, name: str):
         self.name = name
         self.env = env
         self.db = db
@@ -104,7 +107,7 @@ async def job_watch(request: Request, name: str):
 async def lifespan(app: FastAPI):
     """Setup the fastapi app.state"""
     # setup
-    app.state.env = rcav2.env.Env(debug=True, cookie_path=None)
+    app.state.env = Env(debug=True, cookie_path=None)
     app.state.worker_pool = Pool(2)
     app.state.db = rcav2.database.create(DATABASE_FILE)
     rcav2.model.init_dspy()
@@ -118,21 +121,21 @@ def get_pool(request: Request) -> Pool:
     return request.app.state.worker_pool
 
 
-async def get(request: Request, build: str):
+async def get(request: Request, build: str, workflow: str = "react"):
     """Get or submit the build."""
     pool = get_pool(request)
-    if pool.pending.get(build):
+    if pool.pending.get(f"{workflow}-{build}"):
         return dict(status="PENDING")
     db = request.app.state.db
-    if events := rcav2.database.get(db, build):
+    if events := rcav2.database.get(db, workflow, build):
         return json.loads(events)
-    await pool.submit(RCAJob(request.app.state.env, db, build))
+    await pool.submit(RCAJob(request.app.state.env, db, workflow, build))
     return dict(status="PENDING")
 
 
-async def do_watch(request, job):
+async def do_watch(request, key):
     """The watch handler, to follow the progress of a job."""
-    watcher = await get_pool(request).watch(job)
+    watcher = await get_pool(request).watch(key)
     if not watcher:
         # The report is now completed, redirect the client to the static page
         yield f"data: {json.dumps(['redirect', True])}\n\n"
@@ -144,9 +147,10 @@ async def do_watch(request, job):
             break
 
 
-async def watch(request: Request, build: str):
+async def watch(request: Request, build: str, workflow: str = "react"):
     """Watch a pending build."""
-    return StreamingResponse(do_watch(request, build), media_type="text/event-stream")
+    resp = do_watch(request, f"{workflow}-{build}")
+    return StreamingResponse(resp, media_type="text/event-stream")
 
 
 def setup_handlers(app: FastAPI):

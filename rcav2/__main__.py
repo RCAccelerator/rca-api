@@ -33,16 +33,11 @@ async def run_cli() -> None:
     try:
         # Prepare dspy
         rcav2.model.init_dspy()
-        worker = CLIWorker()
 
         # Run workflow...
-        match args.workflow:
-            case "predict":
-                await rcav2.workflows.rca_predict(env, None, args.URL, worker)
-            case "multi":
-                await rcav2.workflows.rca_multi(env, None, args.URL, worker)
-            case None | "react":
-                await rcav2.workflows.rca_react(env, None, args.URL, worker)
+        await rcav2.workflows.run_workflow(
+            env, None, args.workflow, args.URL, CLIWorker()
+        )
     finally:
         env.close()
 

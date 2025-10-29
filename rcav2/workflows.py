@@ -184,3 +184,18 @@ async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> No
             rca_agent, job, errors_report, worker
         )
         await worker.emit(report.model_dump(), event="report")
+
+
+async def run_workflow(
+    env: Env, db: Engine | None, workflow: str, url: str, worker: Worker
+) -> None:
+    match workflow:
+        case "predict":
+            func = rcav2.workflows.rca_predict
+        case "multi":
+            func = rcav2.workflows.rca_multi
+        case "react":
+            func = rcav2.workflows.rca_react
+        case _:
+            raise RuntimeError(f"{workflow}: unknown workflow")
+    await func(env, db, url, worker)

@@ -61,7 +61,7 @@ function Evidence({ error, source }: Evidence) {
 }
 
 export function RcaComponent(
-  { build = "", job = "", backendUrl = "" }: RcaComponentProps,
+  { build = "", job = "", workflow = "", backendUrl = "" }: RcaComponentProps,
 ) {
   const [refresh, setRefresh] = useState(false);
   const [status, setStatus] = useState<string[]>([]);
@@ -143,9 +143,10 @@ export function RcaComponent(
     }
 
     try {
-      const arg = build
+      const base_arg = build
         ? `?build=${encodeURIComponent(build)}`
         : `_job?name=${job}`;
+      const arg = workflow ? `${base_arg}&workflow=${workflow}` : base_arg;
       const submitRes = await fetch(`${backendUrl}/get${arg}`, {
         method: "PUT",
       });
@@ -160,10 +161,7 @@ export function RcaComponent(
         return;
       }
 
-      const watch_arg = build
-        ? `?build=${encodeURIComponent(build)}`
-        : `_job?name=${job}`;
-      eventSource = new EventSource(`${backendUrl}/watch${watch_arg}`);
+      eventSource = new EventSource(`${backendUrl}/watch${arg}`);
 
       eventSource.onmessage = (e) => {
         const [event, body] = JSON.parse(e.data);

@@ -23,6 +23,7 @@ class Report(Base):
 
     build: Mapped[str] = mapped_column(primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
+    workflow: Mapped[str] = mapped_column(primary_key=True)
     events: Mapped[str | None]
 
 
@@ -71,15 +72,17 @@ def set_job(engine: Engine, name: str, body: str):
         session.commit()
 
 
-def get(engine: Engine, build: str) -> str | None:
+def get(engine: Engine, workflow: str, build: str) -> str | None:
     """Get a rca report from the database."""
     with Session(engine) as session:
         try:
-            report = session.scalars(select(Report).where(Report.build == build)).one()
+            report = session.scalars(
+                select(Report).where(Report.build == build, Report.workflow == workflow)
+            ).one()
             return report.events
         except NoResultFound:
             # Prepare a new entry
-            report = Report(build=build)
+            report = Report(build=build, workflow=workflow)
             session.add(report)
             session.commit()
             return None

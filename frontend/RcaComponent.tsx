@@ -19,16 +19,9 @@ interface JiraTicket {
   summary: string;
 }
 
-interface LogSource {
-  log_name: string;
-  log_url: string;
-  archive: boolean;
-}
-
 interface Evidence {
   error: string;
-  source: LogSource;
-  pos: number;
+  source: string;
 }
 
 interface PossibleRootCause {
@@ -40,7 +33,6 @@ interface Report {
   summary?: string;
   possible_root_causes?: PossibleRootCause[];
   jira_tickets?: JiraTicket[];
-  report_url?: string;
 }
 
 interface JobInfo {
@@ -57,21 +49,20 @@ function Spinner() {
   );
 }
 
-function Evidence({ evidence, report_url }: { evidence: Evidence, report_url: string }) {
-  const url = (evidence.source.archive && report_url) ? `${report_url}#lr${evidence.pos}` : evidence.source.log_url;
+function Evidence({ error, source, build_url }: { error: string; source: string; build_url: string }) {
   return (
     <div>
       <div className="bg-slate-100">
         <a
-          href={url}
+          href={build_url + '/' + source}
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:underline"
         >
-          {evidence.source.log_name}
+          {source}
         </a>
       </div>
-      <pre className="pl-2 font-mono break-all whitespace-pre-wrap">{evidence.error}</pre>
+      <pre className="pl-2 font-mono break-all whitespace-pre-wrap">{error}</pre>
     </div>
   );
 }
@@ -86,6 +77,7 @@ export function RcaComponent(
   const [report, setReport] = useState<Report | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [logjuicerUrl, setLogjuicerUrl] = useState("");
+  const [logUrl, setLogUrl] = useState("");
   const [usage, setUsage] = useState<Tokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -99,6 +91,7 @@ export function RcaComponent(
     setReport(null);
     setErrors([]);
     setLogjuicerUrl("");
+    setLogUrl("");
     setUsage(null);
     setIsLoading(true);
 
@@ -125,6 +118,9 @@ export function RcaComponent(
           break;
         case "logjuicer_url":
           setLogjuicerUrl(body);
+          break;
+        case "log_url":
+          setLogUrl(body);
           break;
         case "playbooks":
           setPlaybooks(body);
@@ -325,8 +321,9 @@ export function RcaComponent(
                         {rootCause.evidences.map((evidence, index) => (
                           <li key={index} className="pt-1 break-words">
                             <Evidence
-                              evidence={evidence}
-                              log_url={report?.report_url}
+                              error={evidence.error}
+                              source={evidence.source}
+                              log_url={logUrl}
                             />
                           </li>
                         ))}

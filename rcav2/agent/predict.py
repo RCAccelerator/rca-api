@@ -93,15 +93,13 @@ def keep_context(source: str) -> bool:
 def report_to_prompt(report: rcav2.models.errors.Report) -> str:
     """Convert a report to a LLM prompt
 
-    >>> print(report_to_prompt(rcav2.models.errors.json_to_report(TEST_REPORT)))
-    <BLANKLINE>
-    ## zuul/overcloud.log
-    oops
+    >>> report_to_prompt(rcav2.models.errors.json_to_report(TEST_REPORT))
+    '\\n## zuul/overcloud.log\\noops'
     """
     lines = []
     for logfile in report.logfiles:
-        lines.append(f"\n## {logfile.source.log_name}")
-        context = keep_context(logfile.source.log_name)
+        lines.append(f"\n## {logfile.source}")
+        context = keep_context(logfile.source)
         for error in logfile.errors:
             if context:
                 for line in error.before:

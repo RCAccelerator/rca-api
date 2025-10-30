@@ -132,7 +132,7 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.
         """Read the errors contained in a source log, including the before after context"""
         await worker.emit(f"Checking {source}", "progress")
         for logfile in errors.logfiles:
-            if logfile.source.log_url == source:
+            if logfile.source == source:
                 return logfile.errors
         return []
 
@@ -258,7 +258,7 @@ async def call_agent(
     await worker.emit("Calling RCAAccelerator", "progress")
     errors_count = dict()
     for logfile in errors.logfiles:
-        errors_count[logfile.source.log_url] = len(logfile.errors)
+        errors_count[logfile.source] = len(logfile.errors)
     agent.set_lm(rcav2.model.get_lm("gemini-2.5-pro", max_tokens=1024 * 1024))
     result = await agent.acall(job=job, errors=errors_count, log_url=log_url)
     await rcav2.model.emit_dspy_usage(result, worker)

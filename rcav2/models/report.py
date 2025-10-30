@@ -3,13 +3,10 @@
 
 from pydantic import BaseModel
 
-from rcav2.models.errors import LogSource
-
 
 class Evidence(BaseModel):
     error: str
-    source: LogSource
-    pos: int
+    source: str
 
 
 class PossibleRootCause(BaseModel):

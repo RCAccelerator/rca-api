@@ -8,12 +8,6 @@ This module contains helpers to pre-process a LogJuicer report.
 from pydantic import BaseModel
 
 
-class LogSource(BaseModel):
-    log_name: str
-    log_url: str
-    archive: bool
-
-
 class Error(BaseModel):
     before: list[str]
     line: str
@@ -22,7 +16,7 @@ class Error(BaseModel):
 
 
 class LogFile(BaseModel):
-    source: LogSource
+    source: str
     errors: list[Error]
 
 
@@ -30,24 +24,21 @@ class Report(BaseModel):
     target: str
     log_url: str | None
     logfiles: list[LogFile]
-    report_url: str | None = None
 
 
-def read_source(source: dict) -> LogSource:
+def read_source(source) -> str:
     """Convert absolute source url into a relative path.
 
     >>> read_source({'RawFile': {'Remote': [12, 'example.com/zuul/overcloud.log']}})
-    LogSource(log_name='zuul/overcloud.log', log_url='example.com/zuul/overcloud.log', archive=False)
+    'zuul/overcloud.log'
     """
     match source:
-        case {"RawFile": {"Remote": [pos, url]}}:
-            return LogSource(log_name=url[pos:], log_url=url, archive=False)
-        case {"TarFile": [{"Remote": [_, tar_url]}, _, tar_name]}:
-            return LogSource(log_name=tar_name, log_url=tar_url, archive=True)
+        case {"RawFile": {"Remote": [pos, path]}}:
+            return path[pos:]
+        case {"TarFile": [{"Remote": [pos, _]}, _, path]}:
+            return path[pos:]
         case _:
-            return LogSource(
-                log_name=f"Unknown source: {source}", log_url="", archive=False
-            )
+            return f"Unknown source: {source}"
 
 
 def read_target(target) -> str:
@@ -71,8 +62,7 @@ def read_log_url(target) -> str | None:
             return None
 
 
-def read_error(anomaly: dict, source: dict) -> Error:
-    """Creates an Error from an anomaly."""
+def read_error(anomaly) -> Error:
     return Error(
         before=anomaly["before"],
         line=anomaly["anomaly"]["line"],
@@ -81,21 +71,18 @@ def read_error(anomaly: dict, source: dict) -> Error:
     )
 
 
-def read_logfile(log_report: dict) -> LogFile:
-    source_json = log_report["source"]
+def read_logfile(log_report) -> LogFile:
     return LogFile(
-        source=read_source(source_json),
-        errors=[
-            read_error(anomaly, source_json) for anomaly in log_report["anomalies"]
-        ],
+        source=read_source(log_report["source"]),
+        errors=list(map(read_error, log_report["anomalies"])),
     )
 
 
-def json_to_report(report: dict) -> Report:
+def json_to_report(report) -> Report:
     return Report(
         target=read_target(report["target"]),
+        logfiles=list(map(read_logfile, report["log_reports"])),
         log_url=read_log_url(report["target"]),
-        logfiles=[read_logfile(log) for log in report["log_reports"]],
     )
 
 

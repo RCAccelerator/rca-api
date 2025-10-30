@@ -79,11 +79,10 @@ class ZuulJob(Job):
         except Exception as e:
             self.env.log.exception("Job failed")
             await worker.emit(f"Analysis failed: {e}", event="status")
-        rcav2.database.set_job(
-            self.db,
-            self.name,
-            json.dumps(list(filter(lambda msg: msg[0] != "progress", worker.history))),
+        events = filter(
+            lambda msg: msg[0] not in ["progress", "source_map"], worker.history
         )
+        rcav2.database.set_job(self.db, self.name, json.dumps(list(events)))
 
 
 async def job_get(request: Request, name: str):

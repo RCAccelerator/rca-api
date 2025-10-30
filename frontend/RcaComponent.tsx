@@ -49,7 +49,7 @@ function Spinner() {
   );
 }
 
-function Evidence({ error, source, build_url }: { error: string; source: string; build_url: string }) {
+function Evidence({ error, source, build_url, logjuicer_url, source_map }: { error: string; source: string; build_url: string }) {
   return (
     <div>
       <div className="bg-slate-100">
@@ -60,6 +60,14 @@ function Evidence({ error, source, build_url }: { error: string; source: string;
           className="cursor-pointer hover:underline"
         >
           {source}
+        </a>
+        <a
+          href={logjuicer_url + '#lr-' + source_map[source]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cursor-pointer bg-blue-500 hover:underline rounded-lg text-white mx-2"
+        >
+          logjuicer
         </a>
       </div>
       <pre className="pl-2 font-mono break-all whitespace-pre-wrap">{error}</pre>
@@ -78,6 +86,7 @@ export function RcaComponent(
   const [errors, setErrors] = useState<string[]>([]);
   const [logjuicerUrl, setLogjuicerUrl] = useState("");
   const [logUrl, setLogUrl] = useState("");
+  const [sourceMap, setSourceMap] = useState({});
   const [usage, setUsage] = useState<Tokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -92,6 +101,7 @@ export function RcaComponent(
     setErrors([]);
     setLogjuicerUrl("");
     setLogUrl("");
+    setSourceMap({});
     setUsage(null);
     setIsLoading(true);
 
@@ -121,6 +131,9 @@ export function RcaComponent(
           break;
         case "log_url":
           setLogUrl(body);
+          break;
+        case "source_map":
+          setSourceMap(body);
           break;
         case "playbooks":
           setPlaybooks(body);
@@ -324,6 +337,8 @@ export function RcaComponent(
                               error={evidence.error}
                               source={evidence.source}
                               log_url={logUrl}
+                              source_map={sourceMap}
+                              logjuicer_url={logjuicerUrl}
                             />
                           </li>
                         ))}

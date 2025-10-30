@@ -130,6 +130,11 @@ async def get_report(env: Env, url: str, worker: None | Worker) -> Report:
         report = await get_remote_report(env, url, worker)
     if worker and report.log_url:
         await worker.emit(report.log_url, event="log_url")
+    if worker:
+        await worker.emit(
+            {logfile.source: pos for pos, logfile in enumerate(report.logfiles)},
+            "source_map",
+        )
     if ignore_lines := env.ignore_lines:
         for logfile in report.logfiles:
             logfile.errors = list(

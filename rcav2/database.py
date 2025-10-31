@@ -88,10 +88,12 @@ def get(engine: Engine, workflow: str, build: str) -> str | None:
             return None
 
 
-def set(engine: Engine, build: str, events: str):
+def set(engine: Engine, workflow: str, build: str, events: str):
     """Store a rca report in the database."""
     with Session(engine) as session:
         session.execute(
-            update(Report).where(Report.build == build).values(events=events)
+            update(Report)
+            .where(Report.build == build, Report.workflow == workflow)
+            .values(events=events)
         )
         session.commit()

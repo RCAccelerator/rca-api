@@ -52,6 +52,7 @@ class RCAJob(Job):
         # TODO: maybe compact the chunk in a single 'llm_response' event?
         rcav2.database.set(
             self.db,
+            self.workflow,
             self.url,
             json.dumps(list(filter(lambda msg: msg[0] != "progress", worker.history))),
         )

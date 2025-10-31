@@ -47,7 +47,8 @@ def make_agent(worker: Worker, env: Env) -> dspy.ReAct:
         Always use ~ for text searches with quoted strings."""
         if not env.jira:
             await worker.emit(
-                "JIRA client not available. Set JIRA_URL, JIRA_API_KEY and JIRA_RCA_PROJECTS", "error"
+                "JIRA client not available. Set JIRA_URL, JIRA_API_KEY and JIRA_RCA_PROJECTS",
+                "error",
             )
             return []
 

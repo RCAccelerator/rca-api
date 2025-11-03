@@ -3,43 +3,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./RcaComponent.css";
 
-interface RcaComponentProps {
-  build: string;
-  backendUrl?: string;
-}
-
-interface Tokens {
-  input: number;
-  output: number;
-}
-
-interface JiraTicket {
-  key: string;
-  url: string;
-  summary: string;
-}
-
-interface Evidence {
-  error: string;
-  source: string;
-}
-
-interface PossibleRootCause {
-  cause: string;
-  evidences: Evidence[];
-}
-
-interface Report {
-  summary?: string;
-  possible_root_causes?: PossibleRootCause[];
-  jira_tickets?: JiraTicket[];
-}
-
-interface JobInfo {
-  description?: string;
-  actions?: string[];
-}
-
 function Spinner() {
   return (
     <div className="flex justify-center items-center p-8">
@@ -49,12 +12,12 @@ function Spinner() {
   );
 }
 
-function Evidence({ error, source, build_url, logjuicer_url, source_map }: { error: string; source: string; build_url: string }) {
+function Evidence({ error, source, build_url, logjuicer_url, source_map }) {
   return (
     <div>
       <div className="bg-slate-100">
         <a
-          href={build_url + '/' + source}
+          href={build_url + "/" + source}
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer hover:underline"
@@ -62,7 +25,7 @@ function Evidence({ error, source, build_url, logjuicer_url, source_map }: { err
           {source}
         </a>
         <a
-          href={logjuicer_url + '#lr-' + source_map[source]}
+          href={logjuicer_url + "#lr-" + source_map[source]}
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer bg-blue-500 hover:underline rounded-lg text-white mx-2"
@@ -76,22 +39,22 @@ function Evidence({ error, source, build_url, logjuicer_url, source_map }: { err
 }
 
 export function RcaComponent(
-  { build = "", job = "", workflow = "", backendUrl = "" }: RcaComponentProps,
+  { build = "", job = "", workflow = "", backendUrl = "" },
 ) {
   const [refresh, setRefresh] = useState(false);
-  const [status, setStatus] = useState<string[]>([]);
-  const [playbooks, setPlaybooks] = useState<string[]>([]);
-  const [jobInfo, setJobInfo] = useState<JobInfo | null>(null);
-  const [report, setReport] = useState<Report | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [status, setStatus] = useState([]);
+  const [playbooks, setPlaybooks] = useState([]);
+  const [jobInfo, setJobInfo] = useState(null);
+  const [report, setReport] = useState(null);
+  const [errors, setErrors] = useState([]);
   const [logjuicerUrl, setLogjuicerUrl] = useState("");
   const [logUrl, setLogUrl] = useState("");
   const [sourceMap, setSourceMap] = useState({});
-  const [usage, setUsage] = useState<Tokens | null>(null);
+  const [usage, setUsage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef(null);
 
-  const addError = (e: string) => setErrors((prev) => [...prev, e]);
+  const addError = (e) => setErrors((prev) => [...prev, e]);
 
   async function getReport() {
     setStatus([]);
@@ -307,9 +270,13 @@ export function RcaComponent(
                   </div>
                 </div>
               )}
-              {report.possible_root_causes && report.possible_root_causes.length > 0 && (
+              {report.possible_root_causes &&
+                report.possible_root_causes.length > 0 && (
                 <>
-                  {report.possible_root_causes.map((rootCause, rootCauseIndex) => (
+                  {report.possible_root_causes.map((
+                    rootCause,
+                    rootCauseIndex,
+                  ) => (
                     <div key={rootCauseIndex} className="mb-6">
                       <h3 className="font-semibold">
                         Possible Root Cause {rootCauseIndex + 1}

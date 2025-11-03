@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: standalone ? {} : {
     lib: {
-      entry: resolve(__dirname, 'frontend/index.ts'),
+      entry: resolve(__dirname, 'frontend/RcaComponent.jsx'),
       name: 'RcaComponent',
     },
     rollupOptions: {

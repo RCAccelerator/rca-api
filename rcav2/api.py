@@ -5,7 +5,7 @@
 This module defines the FastAPI handlers.
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import (
     StreamingResponse,
 )
@@ -86,6 +86,10 @@ class ZuulJob(Job):
         rcav2.database.set_job(self.db, self.name, json.dumps(list(events)))
 
 
+router = APIRouter()
+
+
+@router.put("/get_job")
 async def job_get(request: Request, name: str):
     """Describe a job"""
     state = request.app.state.rca
@@ -97,6 +101,21 @@ async def job_get(request: Request, name: str):
     return dict(status="PENDING")
 
 
+async def do_watch(pool: Pool, key: str):
+    """The watch handler, to follow the progress of a job."""
+    watcher = await pool.watch(key)
+    if not watcher:
+        # The report is now completed, redirect the client to the static page
+        yield f"data: {json.dumps(['redirect', True])}\n\n"
+        return
+    while True:
+        event = await watcher.recv()
+        yield f"data: {json.dumps(event)}\n\n"
+        if event == "status":
+            break
+
+
+@router.get("/watch_job")
 async def job_watch(request: Request, name: str):
     """Watch a pending job."""
     return StreamingResponse(
@@ -133,25 +152,13 @@ async def lifespan(app: FastAPI):
     await app.state.rca.stop()
 
 
+@router.put("/get")
 async def get(request: Request, build: str, workflow: str = "react"):
     """Get or submit the build."""
     return await request.app.state.rca.get_report(build, workflow)
 
 
-async def do_watch(pool: Pool, key: str):
-    """The watch handler, to follow the progress of a job."""
-    watcher = await pool.watch(key)
-    if not watcher:
-        # The report is now completed, redirect the client to the static page
-        yield f"data: {json.dumps(['redirect', True])}\n\n"
-        return
-    while True:
-        event = await watcher.recv()
-        yield f"data: {json.dumps(event)}\n\n"
-        if event == "status":
-            break
-
-
+@router.get("/watch")
 async def watch(request: Request, build: str, workflow: str = "react"):
     """Watch a pending build."""
     resp = do_watch(request.app.state.rca.pool, f"{workflow}-{build}")
@@ -159,7 +166,4 @@ async def watch(request: Request, build: str, workflow: str = "react"):
 
 
 def setup_handlers(app: FastAPI):
-    app.add_api_route("/get", endpoint=get, methods=["PUT"])
-    app.add_api_route("/watch", endpoint=watch, methods=["GET"])
-    app.add_api_route("/get_job", endpoint=job_get, methods=["PUT"])
-    app.add_api_route("/watch_job", endpoint=job_watch, methods=["GET"])
+    app.include_router(router)

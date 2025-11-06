@@ -29,10 +29,9 @@
       import { RcaComponent } from "./frontend/RcaComponent.jsx";
 
       let build = new URL(document.location.href).searchParams.get("build")
-      let job = new URL(document.location.href).searchParams.get("job")
       let workflow = new URL(document.location.href).searchParams.get("workflow")
       createRoot(document.getElementById("root")).render(
-          createElement(RcaComponent, {build, job, workflow}, null)
+          createElement(RcaComponent, {build, workflow}, null)
       );
     </script>
   </body>

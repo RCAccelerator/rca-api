@@ -38,9 +38,7 @@ function Evidence({ error, source, log_url, logjuicer_url, source_map }) {
   );
 }
 
-export function RcaComponent(
-  { build = "", job = "", workflow = "", backendUrl = "" },
-) {
+export function RcaComponent({ build = "", workflow = "", backendUrl = "" }) {
   const [refresh, setRefresh] = useState(false);
   const [status, setStatus] = useState([]);
   const [playbooks, setPlaybooks] = useState([]);
@@ -68,7 +66,7 @@ export function RcaComponent(
     setUsage(null);
     setIsLoading(true);
 
-    if (!build && !job) {
+    if (!build) {
       setStatus(
         (_) => ["Build is missing, try adding ?build=... to the page url."],
       );
@@ -131,10 +129,8 @@ export function RcaComponent(
     }
 
     try {
-      const base_arg = build
-        ? `?build=${encodeURIComponent(build)}`
-        : `_job?name=${job}`;
-      const arg = workflow ? `${base_arg}&workflow=${workflow}` : base_arg;
+      const arg = `?build=${encodeURIComponent(build)}` +
+        (workflow ? `&workflow=${workflow}` : "");
       const submitRes = await fetch(`${backendUrl}/get${arg}`, {
         method: "PUT",
       });
@@ -177,7 +173,7 @@ export function RcaComponent(
   useEffect(() => {
     getReport();
     return () => {};
-  }, [build, job, refresh]);
+  }, [build, refresh]);
   return (
     <div className="flex flex-col items-center">
       <div className="w-full max-w-4xl">

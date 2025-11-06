@@ -16,7 +16,7 @@ from rcav2.config import LLM_TEMPERATURE, OPIK_PROJECT_NAME, OPIK_TAGS
 
 
 class TraceManager:
-    def __init__(self, workflow: str, url: str):
+    def __init__(self, run_id: str, workflow: str, url: str):
         if os.environ.get("OPIK_DISABLED", "false").lower() == "true" or os.environ.get(
             "DSPY_DEBUG"
         ):
@@ -28,6 +28,7 @@ class TraceManager:
             metadata = {
                 "build_url": url,
                 "build_id": build_id,
+                "run_id": run_id,
                 "workflow_type": workflow,
             }
             tags = [OPIK_PROJECT_NAME, workflow] + OPIK_TAGS

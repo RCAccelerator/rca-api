@@ -38,7 +38,9 @@ function Evidence({ error, source, log_url, logjuicer_url, source_map }) {
   );
 }
 
-export function RcaComponent({ build = "", workflow = "", backendUrl = "" }) {
+export function RcaComponent(
+  { build = "", workflow = "", backendUrl = "", setID = null },
+) {
   const [refresh, setRefresh] = useState(false);
   const [status, setStatus] = useState([]);
   const [playbooks, setPlaybooks] = useState([]);
@@ -81,6 +83,11 @@ export function RcaComponent({ build = "", workflow = "", backendUrl = "" }) {
     function handleMessage(event, body) {
       setIsLoading(false);
       switch (event) {
+        case "run_id":
+          if (setID != null) {
+            setID(body);
+          }
+          break;
         case "progress":
           setStatus((prevStatus) => [body, ...prevStatus]);
           break;

@@ -6,6 +6,7 @@ This module defines the RCA workflows.
 """
 
 import json
+import uuid
 
 from rcav2.env import Env
 from rcav2.database import Engine
@@ -119,82 +120,75 @@ async def describe_job(
 
 async def rca_predict(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
     """A two step workflow with job description"""
-    await worker.emit("predict", event="workflow")
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    with TraceManager("predict", url):
-        await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-        job = await describe_job(env, db, errors_report.target, worker)
-        if job:
-            await worker.emit(job.model_dump(), event="job")
+    await worker.emit(f"Describing job {errors_report.target}...", event="progress")
+    job = await describe_job(env, db, errors_report.target, worker)
+    if job:
+        await worker.emit(job.model_dump(), event="job")
 
-        rca_agent = rcav2.agent.predict.make_agent()
-        (possible_root_causes, summary) = await rcav2.agent.predict.call_agent(
-            rca_agent, job, errors_report, worker
-        )
+    rca_agent = rcav2.agent.predict.make_agent()
+    (possible_root_causes, summary) = await rcav2.agent.predict.call_agent(
+        rca_agent, job, errors_report, worker
+    )
 
-        report = Report(
-            summary=summary, possible_root_causes=possible_root_causes, jira_tickets=[]
-        )
-        await worker.emit(report.model_dump(), event="report")
+    report = Report(
+        summary=summary, possible_root_causes=possible_root_causes, jira_tickets=[]
+    )
+    await worker.emit(report.model_dump(), event="report")
 
 
 async def rca_multi(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
     """A three step workflow with job description and jira agent"""
-    await worker.emit("multi", event="workflow")
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    with TraceManager("multi", url):
-        # Step1: Getting build description
-        await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-        job = await describe_job(env, db, errors_report.target, worker)
-        if job:
-            await worker.emit(job.model_dump(), event="job")
+    # Step1: Getting build description
+    await worker.emit(f"Describing job {errors_report.target}...", event="progress")
+    job = await describe_job(env, db, errors_report.target, worker)
+    if job:
+        await worker.emit(job.model_dump(), event="job")
 
-        # Step2: Analyzing build errors
-        rca_agent = rcav2.agent.predict.make_agent()
-        (root_causes, summary) = await rcav2.agent.predict.call_agent(
-            rca_agent, job, errors_report, worker
-        )
+    # Step2: Analyzing build errors
+    rca_agent = rcav2.agent.predict.make_agent()
+    (root_causes, summary) = await rcav2.agent.predict.call_agent(
+        rca_agent, job, errors_report, worker
+    )
 
-        # Step3: Gathering additional context
-        # Get the primary root cause description and evidences for Jira search
-        jira_agent = rcav2.agent.jira_agent.make_agent(worker, env)
-        tickets = await rcav2.agent.jira_agent.call_agent(
-            jira_agent, summary, root_causes, worker
-        )
-        report = Report(
-            summary=summary,
-            possible_root_causes=root_causes,
-            jira_tickets=tickets,
-        )
-        await worker.emit(report.model_dump(), event="report")
+    # Step3: Gathering additional context
+    # Get the primary root cause description and evidences for Jira search
+    jira_agent = rcav2.agent.jira_agent.make_agent(worker, env)
+    tickets = await rcav2.agent.jira_agent.call_agent(
+        jira_agent, summary, root_causes, worker
+    )
+    report = Report(
+        summary=summary,
+        possible_root_causes=root_causes,
+        jira_tickets=tickets,
+    )
+    await worker.emit(report.model_dump(), event="report")
 
 
 async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
     """A two step workflow using a ReAct module"""
-    await worker.emit("react", event="workflow")
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
-    with TraceManager("react", url):
-        await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-        job = await describe_job(env, db, errors_report.target, worker)
-        if job:
-            await worker.emit(job.model_dump(), event="job")
+    await worker.emit(f"Describing job {errors_report.target}...", event="progress")
+    job = await describe_job(env, db, errors_report.target, worker)
+    if job:
+        await worker.emit(job.model_dump(), event="job")
 
-        rca_agent = rcav2.agent.react.make_agent(errors_report, worker, env)
-        report = await rcav2.agent.react.call_agent(
-            rca_agent, job, errors_report, worker
-        )
-        await worker.emit(report.model_dump(), event="report")
+    rca_agent = rcav2.agent.react.make_agent(errors_report, worker, env)
+    report = await rcav2.agent.react.call_agent(rca_agent, job, errors_report, worker)
+    await worker.emit(report.model_dump(), event="report")
 
 
 async def run_workflow(
     env: Env, db: Engine | None, workflow: str, url: str, worker: Worker
 ) -> None:
+    await worker.emit(workflow, event="workflow")
     match workflow:
         case "predict":
             func = rcav2.workflows.rca_predict
@@ -204,4 +198,7 @@ async def run_workflow(
             func = rcav2.workflows.rca_react
         case _:
             raise RuntimeError(f"{workflow}: unknown workflow")
-    await func(env, db, url, worker)
+    run_id = str(uuid.uuid4())
+    await worker.emit(run_id, event="run_id")
+    with TraceManager(run_id, workflow, url):
+        await func(env, db, url, worker)

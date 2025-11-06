@@ -18,19 +18,19 @@ class Settings(BaseSettings):
 
     # Opik configuration
     OPIK_PROJECT_NAME: str = "rca-api"
-    OPIK_TAGS: list[str]
+    OPIK_TAGS: str
     OPIK_URL_OVERRIDE: str
 
+    # Jira config
+    JIRA_URL: str
+    JIRA_API_KEY: str
+    # Comma-separated list of projects to search for related tickets during RCA
+    JIRA_RCA_PROJECTS: str
 
-# JIRA configuration (optional - only needed if using JIRA tools)
-JIRA_URL = os.environ.get("JIRA_URL")
-JIRA_API_KEY = os.environ.get("JIRA_API_KEY")
-# Comma-separated list of projects to search for related tickets during RCA
-JIRA_RCA_PROJECTS = os.environ.get("JIRA_RCA_PROJECTS")
+    # Slack config
+    SLACK_API_KEY: str
+    SLACK_SEARCH_CHANNELS: str
 
-# Slack configuration (optional - only needed if using slack tools)
-SLACK_API_KEY = os.environ.get("SLACK_API_KEY")
-SLACK_SEARCH_CHANNELS = os.environ.get("SLACK_SEARCH_CHANNELS")
 
 CA_BUNDLE_PATH = os.environ.get(
     "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
@@ -39,7 +39,7 @@ COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
 JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE")
 
 
-def _get_opik_tags() -> list[str]:
+def get_opik_tags(tags_str) -> list[str]:
     """Get additional Opik tags from environment variable, defaulting to empty list.
 
     Supports both comma-separated and space-separated tags:
@@ -60,6 +60,3 @@ def _get_opik_tags() -> list[str]:
         tags = tags_str.split()
     # Filter out empty strings
     return [tag for tag in tags if tag]
-
-
-OPIK_TAGS = _get_opik_tags()

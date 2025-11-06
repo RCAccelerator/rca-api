@@ -173,5 +173,5 @@ async def run_workflow(env: Env, workflow: str, url: str, worker: Worker) -> Non
             raise RuntimeError(f"{workflow}: unknown workflow")
     run_id = str(uuid.uuid4())
     await worker.emit(run_id, event="run_id")
-    with TraceManager(env.settings, run_id, workflow, url):
+    with TraceManager(env, run_id, workflow, url):
         await func(env, url, worker)

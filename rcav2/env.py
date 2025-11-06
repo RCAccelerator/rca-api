@@ -16,15 +16,7 @@ import rcav2.models.errors
 from rcav2.tools.jira_client import Jira
 from rcav2.tools.slack import SlackClient
 from rcav2.models.zuul_info import ZuulInfo
-from rcav2.config import (
-    Settings,
-    CA_BUNDLE_PATH,
-    JIRA_URL,
-    JIRA_API_KEY,
-    JIRA_RCA_PROJECTS,
-    SLACK_API_KEY,
-    SLACK_SEARCH_CHANNELS,
-)
+from rcav2.config import Settings, CA_BUNDLE_PATH, get_opik_tags
 
 
 class Env:
@@ -43,6 +35,7 @@ class Env:
             settings = base_settings
         self.settings = settings
         self.sf_url = f"https://{settings.SF_DOMAIN}"
+        self.opik_tags = get_opik_tags(settings.OPIK_TAGS)
 
         lvl = logging.DEBUG if debug else logging.INFO
         logging.basicConfig(format="%(asctime)s %(levelname)9s %(message)s", level=lvl)
@@ -62,13 +55,17 @@ class Env:
         self.ignore_lines: re.Pattern | None = None
 
         # Initialize JIRA client if credentials are available
-        if JIRA_URL and JIRA_API_KEY and JIRA_RCA_PROJECTS:
-            self.jira = Jira(JIRA_URL, JIRA_API_KEY, JIRA_RCA_PROJECTS.split(","))
+        if settings.JIRA_URL and settings.JIRA_API_KEY and settings.JIRA_RCA_PROJECTS:
+            self.jira = Jira(
+                settings.JIRA_URL,
+                settings.JIRA_API_KEY,
+                settings.JIRA_RCA_PROJECTS.split(","),
+            )
 
         # Initialize Slack client if credentials are available
-        if SLACK_API_KEY and SLACK_SEARCH_CHANNELS:
-            channels = SLACK_SEARCH_CHANNELS.split(",")
-            self.slack = SlackClient(SLACK_API_KEY, channels)
+        if settings.SLACK_API_KEY and settings.SLACK_SEARCH_CHANNELS:
+            channels = settings.SLACK_SEARCH_CHANNELS.split(",")
+            self.slack = SlackClient(settings.SLACK_API_KEY, channels)
 
     def close(self):
         if self.cookie and self.cookie_path:

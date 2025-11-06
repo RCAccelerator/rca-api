@@ -13,6 +13,7 @@ import opik
 from opik.integrations.dspy.callback import OpikCallback
 
 from rcav2.config import Settings
+from rcav2.env import Env
 
 
 class TraceManager:
@@ -29,12 +30,12 @@ class TraceManager:
                 "run_id": run_id,
                 "workflow_type": workflow,
             }
-            tags = [settings.OPIK_PROJECT_NAME, workflow] + settings.OPIK_TAGS
+            tags = [env.settings.OPIK_PROJECT_NAME, workflow] + env.opik_tags
             self.manager = opik.start_as_current_trace(
                 trace_name,
                 metadata=metadata,
                 tags=tags,
-                project_name=settings.OPIK_PROJECT_NAME,
+                project_name=env.settings.OPIK_PROJECT_NAME,
             )
 
     def __enter__(self):

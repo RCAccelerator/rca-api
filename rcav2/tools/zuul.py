@@ -116,7 +116,7 @@ async def amain() -> None:
     import json
     import sys
 
-    env = Env(True, ".cookie")
+    env = Env(True)
     try:
         export = json.load(open(".zuul-export.json"))
     except Exception:

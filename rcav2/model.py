@@ -5,8 +5,6 @@
 This module defines the model configuration.
 """
 
-import os
-
 import dspy  # type: ignore[import-untyped]
 from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import opik
@@ -17,8 +15,8 @@ from rcav2.env import Env
 
 
 class TraceManager:
-    def __init__(self, run_id: str, workflow: str, url: str):
-        if os.environ.get("OPIK_DISABLED", "false").lower() == "true":
+    def __init__(self, env: Env, run_id: str, workflow: str, url: str):
+        if env.settings.OPIK_DISABLED:
             self.enabled = False
         else:
             self.enabled = True
@@ -76,14 +74,14 @@ class AgentLoggingCallback(BaseCallback):
 def init_dspy(settings: Settings) -> None:
     dspy.settings.configure(track_usage=True)
 
-    if not os.environ.get("DSPY_CACHE"):
+    if not settings.DSPY_CACHE:
         dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)
 
     # Check if Opik is explicitly disabled
-    if os.environ.get("OPIK_DISABLED", "false").lower() == "true":
+    if settings.OPIK_DISABLED:
         print("Opik integration disabled by OPIK_DISABLED environment variable")
         callbacks = []  # type: ignore
-        if os.environ.get("DSPY_DEBUG"):
+        if settings.DSPY_DEBUG:
             callbacks.append(AgentLoggingCallback())
         dspy.configure(
             lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),

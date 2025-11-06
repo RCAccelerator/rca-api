@@ -16,7 +16,7 @@ import rcav2.models.errors
 from rcav2.tools.jira_client import Jira
 from rcav2.tools.slack import SlackClient
 from rcav2.models.zuul_info import ZuulInfo
-from rcav2.config import Settings, CA_BUNDLE_PATH, get_opik_tags
+from rcav2.config import Settings, get_opik_tags
 
 
 class Env:
@@ -25,7 +25,6 @@ class Env:
     def __init__(
         self,
         debug,
-        cookie_path: str | None = None,
         base_settings: Settings | None = None,
     ):
         if not base_settings:
@@ -40,12 +39,14 @@ class Env:
         lvl = logging.DEBUG if debug else logging.INFO
         logging.basicConfig(format="%(asctime)s %(levelname)9s %(message)s", level=lvl)
         self.cookie = None
-        self.cookie_path = cookie_path
+        self.cookie_path = settings.COOKIE_FILE
         self.cookie_age = 0.0
         self.logjuicer_report: rcav2.models.errors.Report | None = None
         self.zuul_info: ZuulInfo | None = None
         self.zuul_info_age = 0.0
-        self.httpx = make_httpx_client(settings.SF_DOMAIN, cookie_path)
+        self.httpx = make_httpx_client(
+            settings.CA_BUNDLE_PATH, settings.SF_DOMAIN, settings.COOKIE_FILE
+        )
         self.auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         self.log = logging.getLogger("rcav2")
         self.jira: Jira | None = None
@@ -53,6 +54,8 @@ class Env:
         self.extra_description: str | None = None
 
         self.ignore_lines: re.Pattern | None = None
+        if settings.RCA_IGNORE_LINES:
+            self.ignore_lines = re.compile(settings.RCA_IGNORE_LINES)
 
         # Initialize JIRA client if credentials are available
         if settings.JIRA_URL and settings.JIRA_API_KEY and settings.JIRA_RCA_PROJECTS:
@@ -73,12 +76,14 @@ class Env:
                 f.write(self.cookie)
 
 
-def make_httpx_client(sf_domain: str, cookie_path: str | None) -> httpx.AsyncClient:
+def make_httpx_client(
+    sf_domain: str, ca_bundle_path: str, cookie_path: str | None
+) -> httpx.AsyncClient:
     """Setup the httpx client using local CA."""
     # Load local CA
     verify = True
-    if pathlib.Path(CA_BUNDLE_PATH).exists():
-        verify = ssl.create_default_context(cafile=CA_BUNDLE_PATH)  # type: ignore
+    if pathlib.Path(ca_bundle_path).exists():
+        verify = ssl.create_default_context(cafile=ca_bundle_path)  # type: ignore
 
     # Restore cookies
     cookies = httpx.Cookies()

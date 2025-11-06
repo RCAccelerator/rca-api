@@ -9,7 +9,6 @@ import uuid
 
 from rcav2.env import Env
 from rcav2.worker import Worker
-from rcav2.config import JOB_DESCRIPTION_FILE
 from rcav2.agent.ansible import Job
 from rcav2.models.report import Report
 from rcav2.model import TraceManager
@@ -23,36 +22,32 @@ import rcav2.agent.predict
 import rcav2.agent.react
 
 
-def load_job_description_file() -> str | None:
+def load_job_description_file(dfile) -> str | None:
     """Load additional job description from file or URL specified by JOB_DESCRIPTION_FILE environment variable."""
-    if not JOB_DESCRIPTION_FILE:
+    if not dfile:
         return None
 
     # Check if it's a URL (starts with http:// or https://)
-    if JOB_DESCRIPTION_FILE and JOB_DESCRIPTION_FILE.startswith(
-        ("http://", "https://")
-    ):
+    if dfile and dfile.startswith(("http://", "https://")):
         try:
             import httpx
 
-            response = httpx.get(JOB_DESCRIPTION_FILE, timeout=30.0)
+            response = httpx.get(dfile, timeout=30.0)
             response.raise_for_status()
             return response.text.strip()
         except Exception as e:
-            print(
-                f"Error fetching job description from URL {JOB_DESCRIPTION_FILE}: {e}"
-            )
+            print(f"Error fetching job description from URL {dfile}: {e}")
             return None
     else:
         # Treat as local file path
         try:
-            with open(JOB_DESCRIPTION_FILE, "r", encoding="utf-8") as f:
+            with open(dfile, "r", encoding="utf-8") as f:
                 return f.read().strip()
         except FileNotFoundError:
-            print(f"Job description file not found: {JOB_DESCRIPTION_FILE}")
+            print(f"Job description file not found: {dfile}")
             return None
         except Exception as e:
-            print(f"Error reading job description file {JOB_DESCRIPTION_FILE}: {e}")
+            print(f"Error reading job description file {dfile}: {e}")
             return None
 
 
@@ -74,10 +69,10 @@ async def describe_job(env: Env, job_name: str, worker: Worker) -> Job | None:
     # Load additional job description from file if specified
     if desc := env.extra_description:
         additional_description = desc
-    elif desc := load_job_description_file():
+    elif desc := load_job_description_file(env.settings.JOB_DESCRIPTION_FILE):
         additional_description = desc
         await worker.emit(
-            f"Loaded additional job description from {JOB_DESCRIPTION_FILE}",
+            f"Loaded additional job description from {env.settings.JOB_DESCRIPTION_FILE}",
             event="progress",
         )
     else:

@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This module defines the system configuration from the process os.environ.
+This module defines the system configuration using pydantic_settings
 """
 
-import os
 from pydantic_settings import BaseSettings
 
 
@@ -15,8 +14,12 @@ class Settings(BaseSettings):
 
     # Model config
     LLM_TEMPERATURE: float = 0.5
+    RCA_IGNORE_LINES: str | None = None
+    DSPY_CACHE: bool = False
+    DSPY_DEBUG: bool = False
 
     # Opik configuration
+    OPIK_DISABLED: bool = False
     OPIK_PROJECT_NAME: str = "rca-api"
     OPIK_TAGS: str
     OPIK_URL_OVERRIDE: str
@@ -31,12 +34,10 @@ class Settings(BaseSettings):
     SLACK_API_KEY: str
     SLACK_SEARCH_CHANNELS: str
 
-
-CA_BUNDLE_PATH = os.environ.get(
-    "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
-)
-COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
-JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE")
+    # Internal config
+    CA_BUNDLE_PATH: str = "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+    COOKIE_FILE: str = ".cookie"
+    JOB_DESCRIPTION_FILE: str = "JOB_DESCRIPTION_FILE"
 
 
 def get_opik_tags(tags_str) -> list[str]:
@@ -47,7 +48,6 @@ def get_opik_tags(tags_str) -> list[str]:
     - Space-separated: "tag1 tag2 tag3"
     - Mixed: "tag1, tag2 tag3" (comma takes precedence)
     """
-    tags_str = os.environ.get("OPIK_TAGS", "")
     if not tags_str:
         return []
     # Support both comma-separated and space-separated tags

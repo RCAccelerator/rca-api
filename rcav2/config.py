@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     # Opik configuration
     OPIK_DISABLED: bool = False
     OPIK_PROJECT_NAME: str = "rca-api"
-    OPIK_TAGS: str
-    OPIK_URL_OVERRIDE: str
+    OPIK_TAGS: str = ""
+    OPIK_URL_OVERRIDE: str = ""
 
     # Jira config
     JIRA_URL: str
@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     JIRA_RCA_PROJECTS: str
 
     # Slack config
-    SLACK_API_KEY: str
-    SLACK_SEARCH_CHANNELS: str
+    SLACK_API_KEY: str = ""
+    SLACK_SEARCH_CHANNELS: str = ""
 
     # Internal config
     CA_BUNDLE_PATH: str = "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"

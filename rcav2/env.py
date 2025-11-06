@@ -45,7 +45,7 @@ class Env:
         self.zuul_info: ZuulInfo | None = None
         self.zuul_info_age = 0.0
         self.httpx = make_httpx_client(
-            settings.CA_BUNDLE_PATH, settings.SF_DOMAIN, settings.COOKIE_FILE
+            settings.SF_DOMAIN, settings.CA_BUNDLE_PATH, settings.COOKIE_FILE
         )
         self.auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         self.log = logging.getLogger("rcav2")

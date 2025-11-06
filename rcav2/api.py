@@ -44,18 +44,19 @@ class RCAJob(Job):
             await rcav2.workflows.run_workflow(
                 self.env, self.db, self.workflow, self.url, worker
             )
+            rcav2.database.set(
+                self.db,
+                self.workflow,
+                self.url,
+                json.dumps(
+                    list(filter(lambda msg: msg[0] != "progress", worker.history))
+                ),
+            )
             await worker.emit("completed", event="status")
+
         except Exception as e:
             self.env.log.exception("Job failed")
             await worker.emit(f"Analysis failed: {e}", event="status")
-
-        # TODO: maybe compact the chunk in a single 'llm_response' event?
-        rcav2.database.set(
-            self.db,
-            self.workflow,
-            self.url,
-            json.dumps(list(filter(lambda msg: msg[0] != "progress", worker.history))),
-        )
 
 
 router = APIRouter()
@@ -113,7 +114,3 @@ async def watch(request: Request, build: str, workflow: str = "react"):
     """Watch a pending build."""
     resp = do_watch(request.app.state.rca.pool, f"{workflow}-{build}")
     return StreamingResponse(resp, media_type="text/event-stream")
-
-
-def setup_handlers(app: FastAPI):
-    app.include_router(router)

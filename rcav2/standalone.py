@@ -11,5 +11,5 @@ from fastapi import FastAPI
 import rcav2.api
 
 app = FastAPI(lifespan=rcav2.api.lifespan)
-rcav2.api.setup_handlers(app)
+app.include_router(rcav2.api.router)
 app.mount("/", StaticFiles(directory="dist", html=True), name="static")

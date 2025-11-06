@@ -12,7 +12,7 @@ from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import opik
 from opik.integrations.dspy.callback import OpikCallback
 
-from rcav2.config import LLM_TEMPERATURE, OPIK_PROJECT_NAME, OPIK_TAGS
+from rcav2.config import Settings
 
 
 class TraceManager:
@@ -29,9 +29,12 @@ class TraceManager:
                 "run_id": run_id,
                 "workflow_type": workflow,
             }
-            tags = [OPIK_PROJECT_NAME, workflow] + OPIK_TAGS
+            tags = [settings.OPIK_PROJECT_NAME, workflow] + settings.OPIK_TAGS
             self.manager = opik.start_as_current_trace(
-                trace_name, metadata=metadata, tags=tags, project_name=OPIK_PROJECT_NAME
+                trace_name,
+                metadata=metadata,
+                tags=tags,
+                project_name=settings.OPIK_PROJECT_NAME,
             )
 
     def __enter__(self):
@@ -45,12 +48,12 @@ class TraceManager:
         return False
 
 
-def get_lm(name: str, max_tokens: int) -> dspy.LM:
+def get_lm(settings: Settings, name: str, max_tokens: int) -> dspy.LM:
     return dspy.LM(
         f"gemini/{name}",
-        temperature=LLM_TEMPERATURE,
+        temperature=settings.LLM_TEMPERATURE,
         max_tokens=max_tokens,
-        api_key=os.environ["LLM_GEMINI_KEY"],
+        api_key=settings.LLM_GEMINI_KEY,
     )
 
 
@@ -69,10 +72,7 @@ class AgentLoggingCallback(BaseCallback):
         return any(k.startswith("Thought") for k in outputs.keys())
 
 
-def init_dspy() -> None:
-    if not os.environ.get("LLM_GEMINI_KEY"):
-        print("DSPY is disabled because LLM_GEMINI_KEY is not set")
-        return
+def init_dspy(settings: Settings) -> None:
     dspy.settings.configure(track_usage=True)
 
     if not os.environ.get("DSPY_CACHE"):
@@ -84,7 +84,10 @@ def init_dspy() -> None:
         callbacks = []  # type: ignore
         if os.environ.get("DSPY_DEBUG"):
             callbacks.append(AgentLoggingCallback())
-        dspy.configure(lm=get_lm("gemini-2.5-pro", 1024 * 1024), callbacks=callbacks)
+        dspy.configure(
+            lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),
+            callbacks=callbacks,
+        )
         return
 
     # Configure Opik - use local deployment by default
@@ -92,17 +95,20 @@ def init_dspy() -> None:
         print("Configuring Opik")
 
         opik_callback = OpikCallback(
-            project_name=OPIK_PROJECT_NAME,
+            project_name=settings.OPIK_PROJECT_NAME,
             log_graph=True,
         )
         dspy.configure(
-            lm=get_lm("gemini-2.5-pro", 1024 * 1024), callbacks=[opik_callback]
+            lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),
+            callbacks=[opik_callback],
         )
-        print(f"DSPy configured with Opik tracing (project: {OPIK_PROJECT_NAME})")
+        print(
+            f"DSPy configured with Opik tracing (project: {settings.OPIK_PROJECT_NAME})"
+        )
     except Exception as e:
         print(f"Failed to configure Opik: {e}")
         print("Falling back to DSPy without Opik tracing")
-        dspy.configure(lm=get_lm("gemini-2.5-pro", 1024 * 1024))
+        dspy.configure(lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024))
 
 
 async def emit_dspy_usage(result, worker):

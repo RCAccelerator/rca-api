@@ -11,6 +11,15 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     SF_DOMAIN: str
+    LLM_GEMINI_KEY: str
+
+    # Model config
+    LLM_TEMPERATURE: float = 0.5
+
+    # Opik configuration
+    OPIK_PROJECT_NAME: str = "rca-api"
+    OPIK_TAGS: list[str]
+    OPIK_URL_OVERRIDE: str
 
 
 # JIRA configuration (optional - only needed if using JIRA tools)
@@ -28,10 +37,6 @@ CA_BUNDLE_PATH = os.environ.get(
 )
 COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
 JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE")
-
-# Opik configuration
-OPIK_PROJECT_NAME = os.environ.get("OPIK_PROJECT_NAME", "rca-api")
-OPIK_URL_OVERRIDE = os.environ.get("OPIK_URL_OVERRIDE")
 
 
 def _get_opik_tags() -> list[str]:
@@ -58,25 +63,3 @@ def _get_opik_tags() -> list[str]:
 
 
 OPIK_TAGS = _get_opik_tags()
-
-
-# LLM configuration
-def _get_temperature() -> float:
-    """Get LLM temperature from environment variable, defaulting to 0.5."""
-    temp_str = os.environ.get("LLM_TEMPERATURE", "0.5")
-    try:
-        temperature = float(temp_str)
-        if temperature < 0.0:
-            print(
-                f"Warning: LLM_TEMPERATURE={temperature} is negative. Using default 0.5."
-            )
-            return 0.5
-        return temperature
-    except ValueError:
-        print(
-            f"Warning: LLM_TEMPERATURE={temp_str} is not a valid float. Using default 0.5."
-        )
-        return 0.5
-
-
-LLM_TEMPERATURE = _get_temperature()

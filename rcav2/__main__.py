@@ -32,7 +32,7 @@ async def run_cli() -> None:
         env.ignore_lines = re.compile(ignore_str)
     try:
         # Prepare dspy
-        rcav2.model.init_dspy()
+        rcav2.model.init_dspy(env.settings)
 
         # Run workflow...
         await rcav2.workflows.run_workflow(env, args.workflow, args.URL, CLIWorker())

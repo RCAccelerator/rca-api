@@ -41,6 +41,7 @@ class Env:
             settings = Settings()  # type: ignore
         else:
             settings = base_settings
+        self.settings = settings
         self.sf_url = f"https://{settings.SF_DOMAIN}"
 
         lvl = logging.DEBUG if debug else logging.INFO

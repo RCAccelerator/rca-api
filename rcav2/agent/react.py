@@ -512,7 +512,6 @@ async def call_agent(
     # errors_count = dict()
     # for logfile in errors.logfiles:
     #    errors_count[logfile.source] = len(logfile.errors)
-    agent.set_lm(rcav2.model.get_lm("gemini-2.5-pro", max_tokens=1024 * 1024))
     result = await agent.acall(job=job, errors=errors.logfiles, log_url=log_url)
     await rcav2.model.emit_dspy_usage(result, worker)
     return result.report

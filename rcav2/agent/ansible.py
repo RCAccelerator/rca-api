@@ -7,6 +7,7 @@ import glob
 
 import rcav2.tools.git
 from rcav2.worker import Worker
+import rcav2.model
 
 
 class Job(BaseModel):
@@ -54,32 +55,3 @@ async def call_agent(agent: dspy.ReAct, plays: list[str], worker: Worker) -> Job
     result = await agent.acall(playbooks=playbooks)
     await rcav2.model.emit_dspy_usage(result, worker)
     return result.job
-
-
-async def main() -> None:
-    """A test experiment"""
-    import sys
-    import json
-    import rcav2.tools.zuul
-    import rcav2.model
-    from rcav2.worker import CLIWorker
-
-    job = sys.argv[1]
-    export = json.load(open(".zuul-export.json"))
-    info = rcav2.tools.zuul.read_weeder_export(export)
-    plays = await rcav2.tools.zuul.get_job_playbooks(info, job)
-    if not plays:
-        print("Couldn't find job playbook")
-        return
-
-    rcav2.model.init_dspy()
-    worker = CLIWorker()
-    agent = make_agent(worker)
-    job_info = await call_agent(agent, plays, worker)
-    print(job_info)
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())

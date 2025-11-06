@@ -13,11 +13,9 @@ from rcav2.models.zuul_info import ZuulInfo, JobInfo, ProjectInfo, ProviderInfo
 
 async def fetch_weeder_export(env: Env) -> dict:
     """Fetch the raw weeder export"""
-    from rcav2.config import SF_URL
-
     # Ensure we are authenticated, otherwise the redirection will fail to PUT
     await rcav2.auth.ensure_cookie(env)
-    url = f"{SF_URL}/weeder/export"
+    url = f"{env.sf_url}/weeder/export"
     return (await env.httpx.get(url, auth=env.auth)).raise_for_status().json()
 
 

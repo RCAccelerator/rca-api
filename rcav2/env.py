@@ -17,7 +17,7 @@ from rcav2.tools.jira_client import Jira
 from rcav2.tools.slack import SlackClient
 from rcav2.models.zuul_info import ZuulInfo
 from rcav2.config import (
-    SF_DOMAIN,
+    Settings,
     CA_BUNDLE_PATH,
     JIRA_URL,
     JIRA_API_KEY,
@@ -30,9 +30,19 @@ from rcav2.config import (
 class Env:
     """The RCAv2 application environment"""
 
-    def __init__(self, debug, cookie_path: str | None = None):
-        if not SF_DOMAIN:
-            raise ValueError("The SF_DOMAIN environment variable must be set")
+    def __init__(
+        self,
+        debug,
+        cookie_path: str | None = None,
+        base_settings: Settings | None = None,
+    ):
+        if not base_settings:
+            # pydantic is magic and it auto load the missing named argument from the environment.
+            settings = Settings()  # type: ignore
+        else:
+            settings = base_settings
+        self.sf_url = f"https://{settings.SF_DOMAIN}"
+
         lvl = logging.DEBUG if debug else logging.INFO
         logging.basicConfig(format="%(asctime)s %(levelname)9s %(message)s", level=lvl)
         self.cookie = None
@@ -41,7 +51,7 @@ class Env:
         self.logjuicer_report: rcav2.models.errors.Report | None = None
         self.zuul_info: ZuulInfo | None = None
         self.zuul_info_age = 0.0
-        self.httpx = make_httpx_client(cookie_path)
+        self.httpx = make_httpx_client(settings.SF_DOMAIN, cookie_path)
         self.auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         self.log = logging.getLogger("rcav2")
         self.jira: Jira | None = None
@@ -65,7 +75,7 @@ class Env:
                 f.write(self.cookie)
 
 
-def make_httpx_client(cookie_path: str | None) -> httpx.AsyncClient:
+def make_httpx_client(sf_domain: str, cookie_path: str | None) -> httpx.AsyncClient:
     """Setup the httpx client using local CA."""
     # Load local CA
     verify = True
@@ -74,14 +84,14 @@ def make_httpx_client(cookie_path: str | None) -> httpx.AsyncClient:
 
     # Restore cookies
     cookies = httpx.Cookies()
-    if cookie_path and SF_DOMAIN:
+    if cookie_path:
         cookie_file = pathlib.Path(cookie_path)
         try:
             if time.time() - cookie_file.stat().st_mtime > 24 * 3600:
                 cookie_file.unlink()
             else:
                 cookie = cookie_file.read_text()
-                cookies.set("mod_auth_openidc_session", cookie, domain=SF_DOMAIN)
+                cookies.set("mod_auth_openidc_session", cookie, domain=sf_domain)
         except FileNotFoundError:
             pass
 

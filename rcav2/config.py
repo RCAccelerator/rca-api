@@ -6,10 +6,12 @@ This module defines the system configuration from the process os.environ.
 """
 
 import os
+from pydantic_settings import BaseSettings
 
-SF_DOMAIN = os.environ.get("SF_DOMAIN")
 
-SF_URL = f"https://{SF_DOMAIN}"
+class Settings(BaseSettings):
+    SF_DOMAIN: str
+
 
 # JIRA configuration (optional - only needed if using JIRA tools)
 JIRA_URL = os.environ.get("JIRA_URL")

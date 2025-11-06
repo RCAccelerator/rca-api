@@ -9,7 +9,6 @@ import os
 import subprocess
 import httpx
 import time
-from .config import SF_URL
 from .env import Env
 
 
@@ -31,9 +30,9 @@ def ensure_kerberos():
 async def get_oidc_cookie(env: Env):
     """Fetch the OIDC cookie."""
     try:
-        (await env.httpx.get(SF_URL, auth=env.auth)).raise_for_status()
+        (await env.httpx.get(env.sf_url, auth=env.auth)).raise_for_status()
     except httpx.ConnectError as e:
-        raise RuntimeError(f"Connection to {SF_URL} failed: {e}. ") from e
+        raise RuntimeError(f"Connection to {env.sf_url} failed: {e}. ") from e
     return env.httpx.cookies.get("mod_auth_openidc_session")
 
 

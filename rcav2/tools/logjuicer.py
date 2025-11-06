@@ -60,22 +60,20 @@ async def wait_report(env: Env, wurl: str, report_id: int, worker: None | Worker
 
 async def do_get_remote_report(env: Env, url: str, worker: None | Worker) -> Report:
     """Create and fetch a logjuicer report from the API (implementation)."""
-    from rcav2.config import SF_URL
-
     # Step1: request report
     env.log.info("%s: Requesting errors report", url)
-    curl = f"{SF_URL}/logjuicer/api/report/new?target={url}&errors=true"
+    curl = f"{env.sf_url}/logjuicer/api/report/new?target={url}&errors=true"
     create_resp = (await env.httpx.put(curl, auth=env.auth)).raise_for_status()
     [report_id, status] = create_resp.json()
 
     if worker:
-        report_url = f"{SF_URL}/logjuicer/report/{report_id}"
+        report_url = f"{env.sf_url}/logjuicer/report/{report_id}"
         await worker.emit(report_url, event="logjuicer_url")
     # Step2: wait for status, from: https://github.com/logjuicer/logjuicer/blob/ba53c7566797cec44a8064dc905c3f78743045c0/crates/report/src/report_row.rs#L47-L51
     match status:
         case "Pending":
             env.log.info("%s: Waiting for errors report %s", url, report_id)
-            wurl = "wss" + SF_URL[len("https") :]
+            wurl = "wss" + env.sf_url[len("https") :]
             await wait_report(env, wurl, report_id, worker)
         case "Completed":
             pass
@@ -83,7 +81,7 @@ async def do_get_remote_report(env: Env, url: str, worker: None | Worker) -> Rep
             raise RuntimeError(f"{url}: report creation failed: {error}")
 
     # Step3: download report
-    curl = f"{SF_URL}/logjuicer/api/report/{report_id}/json"
+    curl = f"{env.sf_url}/logjuicer/api/report/{report_id}/json"
     report = (await env.httpx.get(curl, auth=env.auth)).raise_for_status().json()
     json_report = rcav2.models.errors.json_to_report(report)
     return json_report

@@ -28,7 +28,7 @@ class TraceManager:
                 "run_id": run_id,
                 "workflow_type": workflow,
             }
-            tags = [env.settings.OPIK_PROJECT_NAME, workflow] + env.opik_tags
+            tags = [env.settings.OPIK_PROJECT_NAME, workflow] + env.settings.OPIK_TAGS
             self.manager = opik.start_as_current_trace(
                 trace_name,
                 metadata=metadata,

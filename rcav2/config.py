@@ -5,7 +5,9 @@
 This module defines the system configuration using pydantic_settings
 """
 
-from pydantic_settings import BaseSettings
+from typing import Annotated
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode
 
 
 class Settings(BaseSettings):
@@ -21,42 +23,42 @@ class Settings(BaseSettings):
     # Opik configuration
     OPIK_DISABLED: bool = False
     OPIK_PROJECT_NAME: str = "rca-api"
-    OPIK_TAGS: str = ""
-    OPIK_URL_OVERRIDE: str = ""
+    OPIK_TAGS: Annotated[list[str], NoDecode] = []
+    OPIK_URL_OVERRIDE: str | None = None
 
     # Jira config
-    JIRA_URL: str
-    JIRA_API_KEY: str
+    JIRA_URL: str | None = None
+    JIRA_API_KEY: str | None = None
     # Comma-separated list of projects to search for related tickets during RCA
-    JIRA_RCA_PROJECTS: str
+    JIRA_RCA_PROJECTS: Annotated[list[str], NoDecode] = []
 
     # Slack config
-    SLACK_API_KEY: str = ""
-    SLACK_SEARCH_CHANNELS: str = ""
+    SLACK_API_KEY: str | None = None
+    SLACK_SEARCH_CHANNELS: Annotated[list[str], NoDecode] = []
 
     # Internal config
     CA_BUNDLE_PATH: str = "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
     COOKIE_FILE: str = ".cookie"
-    JOB_DESCRIPTION_FILE: str = "JOB_DESCRIPTION_FILE"
+    JOB_DESCRIPTION_FILE: str | None = None
+
+    @field_validator("OPIK_TAGS", mode="before")
+    @classmethod
+    def parse_tags(cls, v):
+        return parse_list(v)
+
+    @field_validator("JIRA_RCA_PROJECTS", mode="before")
+    @classmethod
+    def parse_projects(cls, v):
+        return parse_list(v)
+
+    @field_validator("SLACK_SEARCH_CHANNELS", mode="before")
+    @classmethod
+    def parse_channels(cls, v):
+        return parse_list(v)
 
 
-def get_opik_tags(tags_str) -> list[str]:
-    """Get additional Opik tags from environment variable, defaulting to empty list.
-
-    Supports both comma-separated and space-separated tags:
-    - Comma-separated: "tag1,tag2,tag3" or "tag1, tag2, tag3"
-    - Space-separated: "tag1 tag2 tag3"
-    - Mixed: "tag1, tag2 tag3" (comma takes precedence)
-    """
-    if not tags_str:
-        return []
-    # Support both comma-separated and space-separated tags
-    # If comma is present, split by comma; otherwise split by space
-    if "," in tags_str:
-        # Comma-separated: split by comma and strip each tag
-        tags = [tag.strip() for tag in tags_str.split(",")]
-    else:
-        # Space-separated: split by whitespace
-        tags = tags_str.split()
-    # Filter out empty strings
-    return [tag for tag in tags if tag]
+def parse_list(v):
+    """Parse comma separated list"""
+    if isinstance(v, str):
+        return [s.strip() for s in v.split(",") if s.strip()]
+    return v

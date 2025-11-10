@@ -1711,7 +1711,6 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pyyaml" },
     { name = "slack-sdk" },
-    { name = "sqlalchemy" },
 ]
 
 [package.dev-dependencies]
@@ -1735,7 +1734,6 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "slack-sdk", specifier = ">=3.37.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.43" },
 ]
 
 [package.metadata.requires-dev]

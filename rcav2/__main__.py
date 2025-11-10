@@ -35,9 +35,7 @@ async def run_cli() -> None:
         rcav2.model.init_dspy()
 
         # Run workflow...
-        await rcav2.workflows.run_workflow(
-            env, None, args.workflow, args.URL, CLIWorker()
-        )
+        await rcav2.workflows.run_workflow(env, args.workflow, args.URL, CLIWorker())
     finally:
         env.close()
 

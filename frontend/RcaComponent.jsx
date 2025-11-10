@@ -41,7 +41,6 @@ function Evidence({ error, source, log_url, logjuicer_url, source_map }) {
 export function RcaComponent(
   { build = "", workflow = "", backendUrl = "", setID = null },
 ) {
-  const [refresh, setRefresh] = useState(false);
   const [status, setStatus] = useState([]);
   const [playbooks, setPlaybooks] = useState([]);
   const [jobInfo, setJobInfo] = useState(null);
@@ -112,13 +111,6 @@ export function RcaComponent(
         case "usage":
           setUsage(body);
           break;
-        case "redirect":
-          if (eventSource) {
-            eventSource.close();
-          }
-          eventSource = null;
-          setRefresh(true);
-          break;
         case "error":
           addError(body);
           break;
@@ -138,21 +130,7 @@ export function RcaComponent(
     try {
       const arg = `?build=${encodeURIComponent(build)}` +
         (workflow ? `&workflow=${workflow}` : "");
-      const submitRes = await fetch(`${backendUrl}/get${arg}`, {
-        method: "PUT",
-      });
-
-      const submitData = await submitRes.json();
-
-      if (submitData instanceof Array) {
-        submitData.forEach(([event, body]) => {
-          handleMessage(event, body);
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      eventSource = new EventSource(`${backendUrl}/watch${arg}`);
+      eventSource = new EventSource(`${backendUrl}/get${arg}`);
 
       eventSource.onmessage = (e) => {
         const [event, body] = JSON.parse(e.data);
@@ -180,7 +158,7 @@ export function RcaComponent(
   useEffect(() => {
     getReport();
     return () => {};
-  }, [build, refresh]);
+  }, [build]);
   return (
     <div className="flex flex-col items-center">
       <div className="w-full max-w-4xl">

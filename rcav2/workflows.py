@@ -5,11 +5,9 @@
 This module defines the RCA workflows.
 """
 
-import json
 import uuid
 
 from rcav2.env import Env
-from rcav2.database import Engine
 from rcav2.worker import Worker
 from rcav2.config import JOB_DESCRIPTION_FILE
 from rcav2.agent.ansible import Job
@@ -71,31 +69,8 @@ async def job_from_model(env: Env, name: str, worker: Worker) -> Job | None:
         return await rcav2.agent.ansible.call_agent(agent, plays, worker)
 
 
-async def job_from_db(db: Engine, job_name: str, worker: Worker) -> Job | None:
-    if events := rcav2.database.get_job(db, job_name):
-        await worker.emit("Found a description in the cache", event="progress")
-        return rcav2.agent.ansible.Job.model_validate(
-            list(filter(lambda ev: ev[0] == "job", json.loads(events)))[0][1]
-        )
-    return None
-
-
-async def describe_job_base(
-    env: Env, db: Engine | None, job_name: str, worker: Worker
-) -> Job | None:
-    if db:
-        if job := await job_from_db(db, job_name, worker):
-            return job
+async def describe_job(env: Env, job_name: str, worker: Worker) -> Job | None:
     job = await job_from_model(env, job_name, worker)
-    if job and db:
-        rcav2.database.set_job(db, job_name, json.dumps([["job", job.model_dump()]]))
-    return job
-
-
-async def describe_job(
-    env: Env, db: Engine | None, job_name: str, worker: Worker
-) -> Job | None:
-    job = await describe_job_base(env, db, job_name, worker)
     # Load additional job description from file if specified
     if desc := env.extra_description:
         additional_description = desc
@@ -118,13 +93,13 @@ async def describe_job(
     return job
 
 
-async def rca_predict(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
+async def rca_predict(env: Env, url: str, worker: Worker) -> None:
     """A two step workflow with job description"""
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
     await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-    job = await describe_job(env, db, errors_report.target, worker)
+    job = await describe_job(env, errors_report.target, worker)
     if job:
         await worker.emit(job.model_dump(), event="job")
 
@@ -139,14 +114,14 @@ async def rca_predict(env: Env, db: Engine | None, url: str, worker: Worker) -> 
     await worker.emit(report.model_dump(), event="report")
 
 
-async def rca_multi(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
+async def rca_multi(env: Env, url: str, worker: Worker) -> None:
     """A three step workflow with job description and jira agent"""
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
     # Step1: Getting build description
     await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-    job = await describe_job(env, db, errors_report.target, worker)
+    job = await describe_job(env, errors_report.target, worker)
     if job:
         await worker.emit(job.model_dump(), event="job")
 
@@ -170,13 +145,13 @@ async def rca_multi(env: Env, db: Engine | None, url: str, worker: Worker) -> No
     await worker.emit(report.model_dump(), event="report")
 
 
-async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> None:
+async def rca_react(env: Env, url: str, worker: Worker) -> None:
     """A two step workflow using a ReAct module"""
     await worker.emit("Fetching build errors...", event="progress")
     errors_report = await rcav2.tools.logjuicer.get_report(env, url, worker)
 
     await worker.emit(f"Describing job {errors_report.target}...", event="progress")
-    job = await describe_job(env, db, errors_report.target, worker)
+    job = await describe_job(env, errors_report.target, worker)
     if job:
         await worker.emit(job.model_dump(), event="job")
 
@@ -185,9 +160,7 @@ async def rca_react(env: Env, db: Engine | None, url: str, worker: Worker) -> No
     await worker.emit(report.model_dump(), event="report")
 
 
-async def run_workflow(
-    env: Env, db: Engine | None, workflow: str, url: str, worker: Worker
-) -> None:
+async def run_workflow(env: Env, workflow: str, url: str, worker: Worker) -> None:
     await worker.emit(workflow, event="workflow")
     match workflow:
         case "predict":
@@ -201,4 +174,4 @@ async def run_workflow(
     run_id = str(uuid.uuid4())
     await worker.emit(run_id, event="run_id")
     with TraceManager(run_id, workflow, url):
-        await func(env, db, url, worker)
+        await func(env, url, worker)

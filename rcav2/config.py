@@ -25,7 +25,6 @@ CA_BUNDLE_PATH = os.environ.get(
     "CA_BUNDLE_PATH", "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
 )
 COOKIE_FILE = os.environ.get("COOKIE_FILE", ".cookie")
-DATABASE_FILE = os.environ.get("DATABASE_FILE", ".db.sqlite3")
 JOB_DESCRIPTION_FILE = os.environ.get("JOB_DESCRIPTION_FILE")
 
 # Opik configuration

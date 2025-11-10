@@ -30,18 +30,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/watch': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/get_job': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/watch_job': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
     }
   }
 })

@@ -5,6 +5,12 @@
 This module defines the model configuration.
 """
 
+import os
+
+# Workaround https://github.com/stanfordnlp/dspy/issues/8717
+if not os.path.exists(os.path.expanduser("~/")):
+    os.environ["DISK_CACHE_DIR"] = "/tmp/.dspy_cache"
+
 import dspy  # type: ignore[import-untyped]
 from dspy.utils.callback import BaseCallback  # type: ignore[import-untyped]
 import opik
@@ -73,9 +79,6 @@ class AgentLoggingCallback(BaseCallback):
 
 def init_dspy(settings: Settings) -> None:
     dspy.settings.configure(track_usage=True)
-
-    if not settings.DSPY_CACHE:
-        dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)
 
     # Check if Opik is explicitly disabled
     if settings.OPIK_DISABLED:

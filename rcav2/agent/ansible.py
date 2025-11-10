@@ -1,10 +1,10 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
-import dspy  # type: ignore[import-untyped]
 from pydantic import BaseModel
 import glob
 
+from rcav2.model import dspy
 import rcav2.tools.git
 from rcav2.worker import Worker
 import rcav2.model

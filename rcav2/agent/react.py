@@ -5,13 +5,12 @@
 A next-gen rca agent that reads the errors as needed
 """
 
-import dspy  # type: ignore[import-untyped]
-
 import rcav2.models.errors
 import rcav2.model
 import rcav2.agent.ansible
 from rcav2.worker import Worker
 from rcav2.models.report import Report
+from rcav2.model import dspy
 
 
 class RCAAccelerator(dspy.Signature):

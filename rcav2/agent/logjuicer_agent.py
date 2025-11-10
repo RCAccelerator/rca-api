@@ -1,13 +1,13 @@
 # Copyright © 2025 Red Hat
 # SPDX-License-Identifier: Apache-2.0
 
-import dspy  # type: ignore[import-untyped]
 import re
 
 import rcav2.models.errors
 import rcav2.agent.ansible
 from rcav2.models.report import PossibleRootCause
 from rcav2.worker import Worker
+from rcav2.model import dspy
 
 
 class RCAAccelerator(dspy.Signature):

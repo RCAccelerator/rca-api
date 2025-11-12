@@ -23,6 +23,7 @@ from rcav2.worker import APIWorker, Watcher
 async def run(worker: APIWorker, env: Env, workflow: str, url: str) -> None:
     try:
         await rcav2.workflows.run_workflow(env, workflow, url, worker)
+        await worker.emit("completed", event="status")
     except Exception as e:
         env.log.exception("Job failed")
         await worker.emit(f"Analysis failed: {e}", event="status")

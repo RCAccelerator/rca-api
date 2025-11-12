@@ -33,7 +33,7 @@ def make_agent(worker: Worker) -> dspy.ReAct:
         try:
             return (root / path).read_text()
         except Exception as e:
-            await worker.emit(f"{path}: read error {e}", "error")
+            await worker.emit(f"{path}: read error {e}", "warning")
             print(f"{path}: read error {e}")
             return None
 

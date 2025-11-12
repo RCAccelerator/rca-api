@@ -306,7 +306,7 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.
         if not env.jira:
             await worker.emit(
                 "JIRA client not available. Set JIRA_URL, JIRA_API_KEY and JIRA_RCA_PROJECTS",
-                "error",
+                "warning",
             )
             return []
 
@@ -326,7 +326,7 @@ def make_agent(errors: rcav2.models.errors.Report, worker: Worker, env) -> dspy.
         if not env.slack:
             await worker.emit(
                 "Slack client not available. Set SLACK_API_KEY and SLACK_SEARCH_CHANNELS",
-                "error",
+                "warning",
             )
             return []
 

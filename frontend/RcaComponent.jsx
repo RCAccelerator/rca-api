@@ -46,6 +46,7 @@ export function RcaComponent(
   const [jobInfo, setJobInfo] = useState(null);
   const [report, setReport] = useState(null);
   const [errors, setErrors] = useState([]);
+  const [warnings, setWarnings] = useState([]);
   const [logjuicerUrl, setLogjuicerUrl] = useState("");
   const [logUrl, setLogUrl] = useState("");
   const [sourceMap, setSourceMap] = useState({});
@@ -113,6 +114,9 @@ export function RcaComponent(
           break;
         case "error":
           addError(body);
+          break;
+        case "warning":
+          setWarnings((prev) => [...prev, body]);
           break;
         case "status":
           console.log("Setting status", body);
@@ -312,6 +316,19 @@ export function RcaComponent(
                   </ul>
                 </>
               )}
+            </div>
+          )}
+          {warnings.length > 0 && (
+            <div className="w-full bg-red-50 dark:bg-gray-800 border border-amber-500 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-amber-700 dark:text-amber-400 border-b border-amber-200 dark:border-gray-700 pb-2 mb-4">
+                Warning
+              </h2>
+              {warnings.map((warning, index) => (
+                <pre
+                  key={index}
+                  className="text-amber-600 dark:text-amber-300 whitespace-pre-wrap break-words font-mono"
+                >{warning}</pre>
+              ))}
             </div>
           )}
           {(jobInfo || playbooks.length > 0) && (

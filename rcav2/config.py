@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     LLM_GEMINI_KEY: str
 
     # Model config
-    LLM_TEMPERATURE: float = 0.5
+    LLM_TEMPERATURE: float = 0.2
     RCA_IGNORE_LINES: str | None = None
     DSPY_CACHE: bool = False
     DSPY_DEBUG: bool = False

@@ -163,7 +163,7 @@ export function RcaComponent(
   }, [build]);
   return (
     <div className="flex flex-col items-center">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-7xl">
         <div
           className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8"
           role="alert"

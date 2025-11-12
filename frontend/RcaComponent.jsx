@@ -89,7 +89,7 @@ export function RcaComponent(
           }
           break;
         case "progress":
-          setStatus((prevStatus) => [body, ...prevStatus]);
+          setStatus((prevStatus) => [...prevStatus, body]);
           break;
         case "report":
           setReport(body);

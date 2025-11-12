@@ -43,6 +43,7 @@ export function RcaComponent(
   { build = "", workflow = "", backendUrl = "", setID = null },
 ) {
   const [status, setStatus] = useState([]);
+  const [showStatus, setShowStatus] = useState(false);
   const [playbooks, setPlaybooks] = useState([]);
   const [jobInfo, setJobInfo] = useState(null);
   const [report, setReport] = useState(null);
@@ -55,6 +56,7 @@ export function RcaComponent(
   const [isLoading, setIsLoading] = useState(true);
   const eventSourceRef = useRef(null);
 
+  const toggleStatus = () => setShowStatus((prev) => !prev);
   const addError = (e) => setErrors((prev) => [...prev, e]);
 
   async function getReport() {
@@ -381,14 +383,19 @@ export function RcaComponent(
           )}
           {status.length > 0 && (
             <div className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
-                Analysis Status
-              </h2>
-              <ul className="list-none p-0 m-0 font-mono text-sm space-y-2">
-                {status.map((msg, index) => (
-                  <li key={index} className="pt-1 break-words">{msg}</li>
-                ))}
-              </ul>
+              <div className="flex">
+                <h2 className="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 grow">
+                  Analysis Status
+                </h2>
+                <a className="cursor-pointer" onClick={toggleStatus}>Expand</a>
+              </div>
+              {showStatus && (
+                <ul className="list-none p-0 m-0 font-mono text-sm space-y-2">
+                  {status.map((msg, index) => (
+                    <li key={index} className="pt-1 break-words">{msg}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </main>

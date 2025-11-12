@@ -3,11 +3,12 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./RcaComponent.css";
 
-function Spinner() {
+function Spinner({ last_status }) {
   return (
-    <div className="flex justify-center items-center p-8">
-      <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin">
+    <div className="flex p-1 place-items-center gap-2 w-full">
+      <div className="w-4 h-4 border-4 border-blue-500 border-dashed rounded-full animate-spin">
       </div>
+      {last_status}
     </div>
   );
 }
@@ -81,7 +82,6 @@ export function RcaComponent(
     }
 
     function handleMessage(event, body) {
-      setIsLoading(false);
       switch (event) {
         case "run_id":
           if (setID != null) {
@@ -119,6 +119,8 @@ export function RcaComponent(
           setWarnings((prev) => [...prev, body]);
           break;
         case "status":
+          // Status is the last event
+          setIsLoading(false);
           console.log("Setting status", body);
           if (body != "completed") {
             addError(body);
@@ -182,7 +184,7 @@ export function RcaComponent(
           </p>
         </div>
         <main className="w-full flex flex-col items-center gap-6">
-          {isLoading && <Spinner />}
+          {isLoading && <Spinner last_status={status[status.length - 1]} />}
           {errors.length > 0 && (
             <div className="w-full bg-red-50 dark:bg-gray-800 border border-red-500 rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-red-700 dark:text-red-400 border-b border-red-200 dark:border-gray-700 pb-2 mb-4">
@@ -377,7 +379,7 @@ export function RcaComponent(
               )}
             </div>
           )}
-          {!isLoading && (status.length > 0) && (
+          {status.length > 0 && (
             <div className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
                 Analysis Status

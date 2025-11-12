@@ -338,8 +338,8 @@ export function RcaComponent(
                   Job Information
                 </h2>
               </div>
-              <div className="mb-4 p-3 rounded-md border border-gray-200 dark:border-gray-600">
-                {jobInfo && jobInfo.description && (
+              {jobInfo && jobInfo.description && (
+                <div className="mb-4 p-3 rounded-md border border-gray-200 dark:border-gray-600">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -353,8 +353,8 @@ export function RcaComponent(
                   >
                     {jobInfo.description}
                   </ReactMarkdown>
-                )}
-              </div>
+                </div>
+              )}
               {playbooks.length > 0 && (
                 <>
                   <h3 className="font-semibold">Playbooks</h3>

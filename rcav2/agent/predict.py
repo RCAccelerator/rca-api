@@ -12,37 +12,24 @@ class RCAAccelerator(dspy.Signature):
     """
     You are a CI engineer, your goal is to find the RCA of this build failure.
 
-    You are given a description of the job and the errors found in the logs.
-
-    ============================================================================
-    INVESTIGATION STRATEGY
-    ============================================================================
+    # INVESTIGATION STRATEGY
 
     1. **Recognize Symptoms:**
        - The errors in `job-output.txt` are often just symptoms
        - The actual root cause likely occurred earlier
 
-    2. **Trace Back to the Root Cause:**
-       - Use the log file list to examine logs that came before `job-output.txt`
-       - These earlier logs are critical for finding the initial point of failure
-
-    3. **Analyze All Evidence:**
+    2. **Analyze All Evidence:**
        - It is crucial that you analyze all the provided errors before drawing a conclusion
        - Do not stop at the first error you find
 
-    4. **Identify the Root Cause:**
-       - After a full analysis, identify all possible root causes (usually 1-3 possibilities)
+    3. **Identify the Root Cause:**
+       - After a full analysis, identify all possible contributing factors (usually 1-3 possibilities)
 
-    ============================================================================
-    ROOT CAUSE REPORTING
-    ============================================================================
+    # ROOT CAUSE REPORTING
 
     Provide a Summary:
     - Provide a concise summary of the root cause analysis
     - The summary should be a brief overview that helps someone quickly understand what went wrong
-    - The summary should include the stage at which the root cause occurred
-    - The summary should also include a small table showing the timeline
-      for the errors that you have identified
 
     You should identify all possible root causes of the failure.
 
@@ -58,15 +45,15 @@ class RCAAccelerator(dspy.Signature):
 
     errors: str = dspy.InputField()
     summary: str = dspy.OutputField()
-    possible_root_causes: list[PossibleRootCause] = dspy.OutputField()
+    contributing_factors: list[PossibleRootCause] = dspy.OutputField()
 
 
-def make_agent() -> dspy.Predict:
-    return dspy.ChainOfThought(RCAAccelerator, max_tokens=1024 * 1024)
+def make_agent() -> dspy.ChainOfThought:
+    return dspy.ChainOfThought(RCAAccelerator)
 
 
 async def call_agent(
-    agent: dspy.Predict,
+    agent: dspy.ChainOfThought,
     job: rcav2.agent.ansible.Job | None,
     errors: rcav2.models.errors.Report,
     worker: Worker,
@@ -74,15 +61,11 @@ async def call_agent(
     if not job:
         job = rcav2.agent.ansible.Job(description="", actions=[])
 
-    # Add log URL to job description if available
-    if log_url := errors.log_url:
-        job.description += f"\n\nBuild Log URL: {log_url}"
-
     await worker.emit("Calling RCAPredict", "progress")
     errors_report = report_to_prompt(errors)
     result = await agent.acall(job=job, errors=errors_report)
     await rcav2.model.emit_dspy_usage(result, worker)
-    return (result.possible_root_causes, result.summary)
+    return (result.contributing_factors, result.summary)
 
 
 def report_to_prompt(report: rcav2.models.errors.Report) -> str:

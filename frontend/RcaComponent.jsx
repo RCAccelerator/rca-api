@@ -5,7 +5,7 @@ import "./RcaComponent.css";
 
 function Spinner({ last_status }) {
   return (
-    <div className="flex p-1 place-items-center gap-2 w-full">
+    <div className="flex p-1 place-items-center gap-2 w-full dark:text-gray-100">
       <div className="w-4 h-4 border-4 border-blue-500 border-dashed rounded-full animate-spin">
       </div>
       {last_status}
@@ -16,12 +16,12 @@ function Spinner({ last_status }) {
 function Evidence({ error, source, log_url, logjuicer_url, source_map }) {
   return (
     <div>
-      <div className="bg-slate-100">
+      <div className="bg-slate-100 dark:bg-gray-700 p-1">
         <a
           href={log_url + "/" + source}
           target="_blank"
           rel="noopener noreferrer"
-          className="cursor-pointer hover:underline"
+          className="cursor-pointer hover:underline text-blue-600 dark:text-blue-400"
         >
           {source}
         </a>
@@ -34,7 +34,7 @@ function Evidence({ error, source, log_url, logjuicer_url, source_map }) {
           logjuicer
         </a>
       </div>
-      <pre className="pl-2 font-mono break-all whitespace-pre-wrap">{error}</pre>
+      <pre className="pl-2 font-mono break-all whitespace-pre-wrap dark:text-gray-300 bg-slate-50 dark:bg-gray-800 p-2">{error}</pre>
     </div>
   );
 }
@@ -203,7 +203,7 @@ export function RcaComponent(
           {report && (
             <div className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md p-6">
               <div className="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 gap-2">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold dark:text-gray-100">
                   Analysis Result
                 </h2>
                 {usage && (
@@ -265,7 +265,7 @@ export function RcaComponent(
                     rootCauseIndex,
                   ) => (
                     <div key={rootCauseIndex} className="mb-6">
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold dark:text-gray-100">
                         Possible Root Cause {rootCauseIndex + 1}
                       </h3>
                       <div className="prose dark:prose-invert max-w-none">
@@ -283,7 +283,7 @@ export function RcaComponent(
                           {rootCause.cause}
                         </ReactMarkdown>
                       </div>
-                      <h3 className="font-semibold pt-2">Evidences</h3>
+                      <h3 className="font-semibold pt-2 dark:text-gray-100">Evidences</h3>
                       <ul className="list-none p-0 m-0 font-mono text-sm space-y-2">
                         {rootCause.evidences.map((evidence, index) => (
                           <li key={index} className="pt-1 break-words">
@@ -303,7 +303,7 @@ export function RcaComponent(
               )}
               {report.jira_tickets && report.jira_tickets.length > 0 && (
                 <>
-                  <h3 className="font-semibold pt-4">Related JIRA Tickets</h3>
+                  <h3 className="font-semibold pt-4 dark:text-gray-100">Related JIRA Tickets</h3>
                   <ul className="list-none p-0 m-0 space-y-2">
                     {report.jira_tickets.map((ticket, index) => (
                       <li key={index} className="pt-1">
@@ -338,7 +338,7 @@ export function RcaComponent(
           {(jobInfo || playbooks.length > 0) && (
             <div className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md p-6">
               <div className="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 gap-2">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold dark:text-gray-100">
                   Job Information
                 </h2>
               </div>
@@ -361,20 +361,20 @@ export function RcaComponent(
               )}
               {playbooks.length > 0 && (
                 <>
-                  <h3 className="font-semibold">Playbooks</h3>
+                  <h3 className="font-semibold dark:text-gray-100">Playbooks</h3>
                   <ul className="list-disc p-0 m-0 font-mono text-sm space-y-2 mb-3">
                     {playbooks.map((play, index) => (
-                      <li key={index} className="pt-1 break-words">{play}</li>
+                      <li key={index} className="pt-1 break-words dark:text-gray-300">{play}</li>
                     ))}
                   </ul>
                 </>
               )}
               {jobInfo && jobInfo.actions && (
                 <>
-                  <h3 className="font-semibold">Actions</h3>
+                  <h3 className="font-semibold dark:text-gray-100">Actions</h3>
                   <ul className="list-decimal p-0 ml-3 font-mono text-sm space-y-2">
                     {jobInfo.actions.map((action, index) => (
-                      <li key={index} className="pt-1 break-words">{action}</li>
+                      <li key={index} className="pt-1 break-words dark:text-gray-300">{action}</li>
                     ))}
                   </ul>
                 </>
@@ -384,15 +384,15 @@ export function RcaComponent(
           {status.length > 0 && (
             <div className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md p-6">
               <div className="flex">
-                <h2 className="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 grow">
+                <h2 className="text-xl font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 grow dark:text-gray-100">
                   Analysis Status
                 </h2>
-                <a className="cursor-pointer" onClick={toggleStatus}>Expand</a>
+                <a className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline" onClick={toggleStatus}>Expand</a>
               </div>
               {showStatus && (
                 <ul className="list-none p-0 m-0 font-mono text-sm space-y-2">
                   {status.map((msg, index) => (
-                    <li key={index} className="pt-1 break-words">{msg}</li>
+                    <li key={index} className="pt-1 break-words dark:text-gray-300">{msg}</li>
                   ))}
                 </ul>
               )}

@@ -11,17 +11,29 @@ import rcav2.model
 class JiraAgent(dspy.Signature):
     """You are a CI engineer, your goal is to find relevant JIRA issue for the provided build report.
 
-    Use search_jira_issues with proper JQL syntax. Examples:
+    1. Search for similar error messages
+       - Extract key error terms and search in Jira
+
+    2. Look for known bugs or issues
+       - Match the failure pattern
+
+    3. Find recent failures
+       - Reported in the same area or component
+
+    Use `search_jira_issues` with proper JQL syntax:
+
+    Examples:
     - search_jira_issues('text ~ "cert-manager secrets not found"')
     - search_jira_issues('summary ~ "timeout" AND text ~ "openstackcontrolplane"')
+
     Remember: Use ~ operator with quoted strings for text searches!
 
-    IMPORTANT: Populate the jira_tickets field in your report with all relevant JIRA tickets you found.
+    IMPORTANT: Populate the jira_tickets field in your report with all relevant JIRA tickets.
+
     For each ticket, include:
     - key: The JIRA ticket key (e.g., "OSPCIX-1234")
     - url: The full URL to the ticket
     - summary: The ticket summary/title
-    Use the results from search_jira_issues to populate this field.
     """
 
     summary: str = dspy.InputField()

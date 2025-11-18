@@ -54,7 +54,8 @@ def load_job_description_file(dfile) -> str | None:
 async def job_from_model(env: Env, name: str, worker: Worker) -> Job | None:
     await worker.emit("Reading job plays...", event="progress")
     zuul_info = await rcav2.tools.zuul.ensure_zuul_info(env)
-    plays = await rcav2.tools.zuul.get_job_playbooks(zuul_info, name)
+    update = env.repo_need_update()
+    plays = await rcav2.tools.zuul.get_job_playbooks(zuul_info, name, update)
     if not plays:
         await worker.emit(f"Couldn't find job {name}", event="error")
         return None

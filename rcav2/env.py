@@ -43,6 +43,7 @@ class Env:
         self.logjuicer_report: rcav2.models.errors.Report | None = None
         self.zuul_info: ZuulInfo | None = None
         self.zuul_info_age = 0.0
+        self.repo_age = 0.0
         self.httpx = make_httpx_client(
             settings.SF_DOMAIN, settings.CA_BUNDLE_PATH, settings.COOKIE_FILE
         )
@@ -69,6 +70,14 @@ class Env:
             self.slack = SlackClient(
                 settings.SLACK_API_KEY, settings.SLACK_SEARCH_CHANNELS
             )
+
+    def repo_need_update(self):
+        """Return True if repo_age is older than 1 hour"""
+        now = time.time()
+        if now - self.repo_age > 3600:
+            self.repo_age = now
+            return True
+        return False
 
     def close(self):
         if self.cookie and self.cookie_path:

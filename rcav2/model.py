@@ -101,7 +101,7 @@ def init_dspy(settings: Settings) -> None:
             log_graph=True,
         )
         dspy.configure(
-            lm=get_lm(settings, "gemini-3-pro", 1024 * 1024),
+            lm=get_lm(settings, "gemini-3-pro-preview", 1024 * 1024),
             callbacks=[opik_callback],
         )
         print(

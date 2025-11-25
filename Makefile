@@ -22,6 +22,20 @@ ci: ## Run tests, linting and type checking
 .PHONY: serve
 serve: frontend-build backend-serve ## Run RCAv2 app with compiled assets
 
+.PHONY: cli-install
+cli-install: ## Install the cli for system-wide use with pipx
+	@pipx install .
+	@pipx ensurepath
+
+.PHONY: cli-uninstall
+cli-uninstall: ## Uninstall the system-wide cli
+	@pipx uninstall rcav2
+
+.PHONY: cli-reinstall
+cli-reinstall: ## Reinstall the system-wide cli
+	@pipx install --force .
+	@pipx ensurepath
+
 .PHONY: release
 release: ## Create a release version of the app
 	npm run release

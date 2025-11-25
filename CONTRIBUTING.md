@@ -144,6 +144,37 @@ $ uv run rcav2 $BUILD_URL
 [RCA will be printed here]
 ```
 
+### System-Wide CLI Installation
+
+For convenience, you can install the `rcav2` executable globally on your system, making it available from any terminal without needing to be in the project directory or use `uv run`.
+
+This process uses `pipx`, a tool for installing and running Python applications in isolated environments.
+
+**1. Install pipx**
+
+First, you need to install `pipx`. It is recommended to install it using `uv` into your system's Python environment.
+
+```bash
+sudo uv pip install --system pipx
+```
+
+**2. Use the Makefile tasks**
+
+The `Makefile` provides convenient tasks to manage the global installation:
+
+-   `make cli-install`: Builds and installs the `rcav2` command using `pipx`. It also runs `pipx ensurepath` to make sure the executable is in your system's `PATH`.
+-   `make cli-uninstall`: Removes the `rcav2` command from your system.
+-   `make cli-reinstall`: Forces a re-installation of the command, which is useful after you've made changes to the code.
+
+After running `make cli-install`, you can invoke the tool directly:
+```bash
+export OPIK_DISABLED=true
+export SF_DOMAIN=sf.example.com
+export LLM_GEMINI_KEY=<api key from bitwarden>
+rcav2 --help
+rcav2 $BUILD_URL
+```
+
 ### API
 
 Build the frontend asset and serve the standalone API:

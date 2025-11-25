@@ -17,6 +17,7 @@ dependencies = [
     "jira>=3.10.5",
     "slack-sdk>=3.37.0",
     "pydantic-settings>=2.11.0",
+    "google-genai >= 1.52.0",
 ]
 
 [dependency-groups]

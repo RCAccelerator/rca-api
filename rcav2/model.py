@@ -54,13 +54,24 @@ class TraceManager:
 
 
 def get_lm(settings: Settings, name: str, max_tokens: int) -> dspy.LM:
-    return dspy.LM(
-        f"gemini/{name}",
-        temperature=settings.LLM_TEMPERATURE,
-        max_tokens=max_tokens,
-        api_key=settings.LLM_GEMINI_KEY,
-    )
+    kwargs = {
+        "temperature": settings.LLM_TEMPERATURE,
+        "max_tokens": max_tokens,
+        "api_key": settings.LLM_GEMINI_KEY,
+    }
+    model_version = name.split("-")[1]
+    if model_version.startswith("3"):
+        from google import genai
+        from google.genai import types
 
+        # Thinking levels: https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+        thinking_config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.HIGH, # accepted: HIGH, LOW, potentially MEDIUM
+            )
+        )
+        kwargs["config"] = thinking_config
+    return dspy.LM(f"gemini/{name}", **kwargs)
 
 # From: https://dspy.ai/tutorials/observability/?h=callback#building-a-custom-logging-solution
 # 1. Define a custom callback class that extends BaseCallback class
@@ -101,6 +112,7 @@ def init_dspy(settings: Settings) -> None:
             log_graph=True,
         )
         dspy.configure(
+            # lm=get_lm(settings, "gemini-3-pro-preview", 1024 * 1024),
             lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),
             callbacks=[opik_callback],
         )

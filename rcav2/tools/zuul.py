@@ -84,13 +84,16 @@ def as_list(item: str | list[str]) -> list[str]:
 
 async def get_job_playbooks(info: ZuulInfo, job_name: str, update: bool = False):
     plays: list[Path] = []
+    repos: dict[str, Path] = dict()
     while True:
         job = info.jobs.get(job_name)
         if not job:
             print(f"Unknown job: {job_name}")
             break
         if url := info.project_git(job.project):
-            path = await rcav2.tools.git.ensure_repo(url, update)
+            if not repos.get(url):
+                repos[url] = await rcav2.tools.git.ensure_repo(url, update)
+            path = repos[url]
             if job_def := read_job(path / job.path, job_name):
                 plays.extend(
                     map(lambda play: path / play, as_list(job_def.get("run", [])))

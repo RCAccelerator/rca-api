@@ -53,25 +53,34 @@ class TraceManager:
         return False
 
 
-def get_lm(settings: Settings, name: str, max_tokens: int) -> dspy.LM:
+def get_lm(settings: Settings) -> dspy.LM:
+    name = settings.LLM_MODEL_NAME
     kwargs = {
         "temperature": settings.LLM_TEMPERATURE,
-        "max_tokens": max_tokens,
+        "max_tokens": settings.LLM_MAX_TOKENS,
         "api_key": settings.LLM_GEMINI_KEY,
     }
     model_version = name.split("-")[1]
     if model_version.startswith("3"):
-        from google import genai
         from google.genai import types
 
         # Thinking levels: https://ai.google.dev/gemini-api/docs/thinking#thinking-levels
+        match settings.LLM_THINKING_LEVEL.upper():
+            case "HIGH":
+                thinking_level = types.ThinkingLevel.HIGH
+            case "LOW":
+                thinking_level = types.ThinkingLevel.LOW
+            case _:
+                thinking_level = types.ThinkingLevel.LOW
+
         thinking_config = types.GenerateContentConfig(
             thinking_config=types.ThinkingConfig(
-                thinking_level=types.ThinkingLevel.HIGH, # accepted: HIGH, LOW, potentially MEDIUM
+                thinking_level=thinking_level,
             )
         )
         kwargs["config"] = thinking_config
     return dspy.LM(f"gemini/{name}", **kwargs)
+
 
 # From: https://dspy.ai/tutorials/observability/?h=callback#building-a-custom-logging-solution
 # 1. Define a custom callback class that extends BaseCallback class
@@ -98,7 +107,7 @@ def init_dspy(settings: Settings) -> None:
         if settings.DSPY_DEBUG:
             callbacks.append(AgentLoggingCallback())
         dspy.configure(
-            lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),
+            lm=get_lm(settings),
             callbacks=callbacks,
         )
         return
@@ -112,8 +121,7 @@ def init_dspy(settings: Settings) -> None:
             log_graph=True,
         )
         dspy.configure(
-            # lm=get_lm(settings, "gemini-3-pro-preview", 1024 * 1024),
-            lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024),
+            lm=get_lm(settings),
             callbacks=[opik_callback],
         )
         print(
@@ -122,7 +130,7 @@ def init_dspy(settings: Settings) -> None:
     except Exception as e:
         print(f"Failed to configure Opik: {e}")
         print("Falling back to DSPy without Opik tracing")
-        dspy.configure(lm=get_lm(settings, "gemini-2.5-pro", 1024 * 1024))
+        dspy.configure(lm=get_lm(settings))
 
 
 async def emit_dspy_usage(result, worker):

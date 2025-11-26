@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     LLM_GEMINI_KEY: str
 
     # Model config
+    LLM_MODEL_NAME: str = "gemini-2.5-pro"
+    LLM_THINKING_LEVEL: str = "LOW"  # gemini 3 models
+    LLM_MAX_TOKENS: int = 1024 * 1024
     LLM_TEMPERATURE: float = 0.2
     RCA_IGNORE_LINES: str | None = None
     DSPY_CACHE: bool = False
